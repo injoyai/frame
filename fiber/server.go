@@ -19,10 +19,10 @@ type (
 func Default() *Server {
 	return New(
 		WithLog(),
-		WithRecover(),
-		WithCache(),
 		WithPprof(),
 		WithCORS(),
+		WithRecover(),
+
 		WithPing(),
 		WithSwagger(middle.DefaultSwagger),
 	)
