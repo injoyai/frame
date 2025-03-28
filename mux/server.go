@@ -49,7 +49,6 @@ func WithLog() Option {
 }
 
 func WithPing(content ...interface{}) Option {
-	delete(in.DefaultClient.BindMap, "/ping")
 	return func(s *Server) {
 		s.GET("/ping", func(r *Request) {
 			if len(content) > 0 {

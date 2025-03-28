@@ -1,8 +1,12 @@
 package fiber
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/injoyai/frame/middle/in"
+)
 
 type Grouper interface {
+	SetRespondent(respondent in.Respondent)
 	Use(use ...Middle)
 	Group(path string, handler func(g Grouper))
 	ALL(path string, handler Handler)
@@ -19,31 +23,57 @@ type Grouper interface {
 
 type group struct {
 	fiber.Router
+	in.Respondent
+}
+
+func (this *group) SetRespondent(r in.Respondent) {
+	this.Respondent = r
 }
 
 func (this *group) Use(use ...Middle) {
 	for _, v := range use {
-		switch val := v.(type) {
-		case HandlerBase:
-			this.Router.Use(val)
-		case Handler:
-			this.Router.Use(func(ctx Ctx) error {
-				val(ctx)
-				return nil
-			})
-		}
+		this.Router.Use(this.transfer(v))
 	}
 }
 
 func (this *group) Group(path string, handler func(g Grouper)) {
 	g := this.Router.Group(path)
-	handler(&group{g})
+	handler(&group{Router: g, Respondent: this.Respondent})
 }
 
 func (this *group) transfer(handler Handler) HandlerBase {
-	return func(ctx Ctx) error {
-		handler(ctx)
-		return nil
+	return func(ctx fiber.Ctx) (err error) {
+		switch f := handler.(type) {
+		case fiber.Handler:
+			err = f(ctx)
+		case func(ctx fiber.Ctx):
+			f(ctx)
+		case func(ctx Ctx) error:
+			cc := NewCtx(ctx, this.Respondent)
+			defer func() {
+				cc.free()
+				ctxPoll.Put(cc)
+			}()
+			err = f(cc)
+		case func(ctx Ctx):
+			cc := NewCtx(ctx, this.Respondent)
+			defer func() {
+				cc.free()
+				ctxPoll.Put(cc)
+			}()
+			f(cc)
+		case func(r Respondent):
+			f(this.Respondent)
+		case in.Option:
+			f(this.Respondent.(in.Client))
+		case func(c in.Client):
+			f(this.Respondent.(in.Client))
+		case WriterOption:
+			this.Respondent.(in.Client).SetWriterOption(f)
+		case func(e Writer):
+			this.Respondent.(in.Client).SetWriterOption(f)
+		}
+		return
 	}
 }
 
