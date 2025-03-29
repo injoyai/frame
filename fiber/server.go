@@ -25,7 +25,8 @@ type (
 		func(e *in.Exit)
 	*/
 	Handler = any
-	Middle  = any
+
+	Middle = Handler
 )
 
 func Default() *Server {
