@@ -50,17 +50,11 @@ func (this *group) transfer(handler Handler) HandlerBase {
 			f(ctx)
 		case func(ctx Ctx) error:
 			cc := NewCtx(ctx, this.Respondent)
-			defer func() {
-				cc.free()
-				ctxPoll.Put(cc)
-			}()
+			defer cc.free()
 			err = f(cc)
 		case func(ctx Ctx):
 			cc := NewCtx(ctx, this.Respondent)
-			defer func() {
-				cc.free()
-				ctxPoll.Put(cc)
-			}()
+			defer cc.free()
 			f(cc)
 		case func(r Respondent):
 			f(this.Respondent)

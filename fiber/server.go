@@ -12,6 +12,7 @@ import (
 
 type (
 	HandlerBase = fiber.Handler
+	Error       = fiber.Error
 
 	/*
 		Handler 支持以下类型
@@ -39,26 +40,41 @@ func Default() *Server {
 }
 
 func New(use ...Middle) *Server {
+	bindErr := make(map[int]func(c Ctx, err *Error))
+	_group := &group{
+		Router:     nil,
+		Respondent: in.DefaultClient,
+	}
 	app := fiber.New(fiber.Config{
-		//这个需要声明下,会在最后执行,否则会返回panic的数据
 		ErrorHandler: func(c fiber.Ctx, err error) error {
+			defer func() {
+				dealRecover(c, recover())
+			}()
 			var e *fiber.Error
 			if errors.As(err, &e) {
+				//相应自定义的绑定
+				if val, ok := bindErr[e.Code]; ok {
+					cc := NewCtx(c, _group.Respondent)
+					defer cc.free()
+					val(cc, e)
+					val = nil
+					return nil
+				}
 				return c.Status(e.Code).SendString(e.Message)
 			}
+			//相应成功
 			return nil
 		},
 		DisableDefaultContentType: true,
 	})
+	_group.Router = app.Group("")
 	ser := &Server{
-		port: frame.DefaultPort,
-		App:  app,
-		Grouper: &group{
-			Router:     app.Group(""),
-			Respondent: in.DefaultClient,
-		},
+		port:    frame.DefaultPort,
+		App:     app,
+		Grouper: _group,
+		bindErr: bindErr,
 	}
-	ser.Use(withRecover)
+	ser.Use(WithRecover())
 	ser.Use(use...)
 	return ser
 }
@@ -67,11 +83,11 @@ type Server struct {
 	port int //端口
 	App  *fiber.App
 	Grouper
-	bindErr map[int]func(ctx fiber.Ctx, err *fiber.Error)
+	bindErr map[int]func(c Ctx, err *Error)
 }
 
 // BindErr 重置响应数据
-func (this *Server) BindErr(code int, f func(ctx fiber.Ctx, err *fiber.Error)) {
+func (this *Server) BindErr(code int, f func(c Ctx, err *Error)) {
 	this.bindErr[code] = f
 }
 

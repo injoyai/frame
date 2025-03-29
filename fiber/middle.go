@@ -22,47 +22,29 @@ import (
 	"unsafe"
 )
 
-func withRecover(c fiber.Ctx) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			switch w := e.(type) {
-			case in.Writer:
-				for i, v := range w.Header() {
-					c.Response().Header.Set(i, strings.Join(v, ","))
-				}
-				if w.StatusCode() >= 0 {
-					c.Status(w.StatusCode())
-				}
-				io.Copy(c, w)
-			case error:
-				err = w
-			default:
-				err = fmt.Errorf("%v", e)
-			}
+func dealRecover(c fiber.Ctx, e any) {
+	switch w := e.(type) {
+	case nil:
+	case in.Writer:
+		for i, v := range w.Header() {
+			c.Response().Header.Set(i, strings.Join(v, ","))
 		}
-	}()
-	return c.Next()
+		if w.StatusCode() >= 0 {
+			c.Status(w.StatusCode())
+		}
+		io.Copy(c, w)
+	default:
+		c.Status(http.StatusInternalServerError)
+		s := conv.String(e)
+		c.Write(*(*[]byte)(unsafe.Pointer(&s)))
+	}
 }
 
+// WithRecover 配合in包使用，可以提前捕获，方便计时能中间件德操作
 func WithRecover() HandlerBase {
 	return rec.New(rec.Config{
-		EnableStackTrace: true,
-		StackTraceHandler: func(c fiber.Ctx, e any) {
-			switch w := e.(type) {
-			case in.Writer:
-				for i, v := range w.Header() {
-					c.Response().Header.Set(i, strings.Join(v, ","))
-				}
-				if w.StatusCode() >= 0 {
-					c.Status(w.StatusCode())
-				}
-				io.Copy(c, w)
-			default:
-				c.Status(http.StatusInternalServerError)
-				s := conv.String(e)
-				c.Write(*(*[]byte)(unsafe.Pointer(&s)))
-			}
-		},
+		EnableStackTrace:  true,
+		StackTraceHandler: dealRecover,
 	})
 }
 

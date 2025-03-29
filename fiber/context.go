@@ -50,10 +50,11 @@ func (this *ctx) Parse(ptr any) {
 	this.CheckErr(err)
 }
 
-// free 手动是否内存
+// free 手动释放内存
 func (this *ctx) free() {
 	this.Ctx = nil
 	this.Respondent = nil
+	ctxPoll.Put(this)
 }
 
 func (this *ctx) OnWebsocket(handler func(conn *Websocket)) {

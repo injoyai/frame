@@ -16,6 +16,10 @@ func main() {
 	{
 		s := fiber.Default()
 
+		s.BindErr(404, func(c fiber.Ctx, err *fiber.Error) {
+			c.Succ("bind succ")
+		})
+
 		s.Group("/api", func(g fiber.Grouper) {
 			g.ALL("/test", func(c fiber.Ctx) {
 				c.Succ(667)

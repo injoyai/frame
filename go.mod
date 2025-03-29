@@ -1,8 +1,9 @@
 module github.com/injoyai/frame
 
-go 1.23.0
+go 1.20
 
 require (
+	github.com/fasthttp/websocket v1.5.3
 	github.com/fatih/color v1.18.0
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
 	github.com/gofiber/websocket/v2 v2.2.1
@@ -11,11 +12,11 @@ require (
 	github.com/injoyai/base v1.0.20
 	github.com/injoyai/conv v1.1.14
 	github.com/injoyai/logs v1.0.9
+	github.com/valyala/fasthttp v1.58.0
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/fasthttp/websocket v1.5.3 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/gofiber/fiber/v2 v2.46.0 // indirect
 	github.com/gofiber/schema v1.2.0 // indirect
@@ -36,7 +37,6 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.58.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
