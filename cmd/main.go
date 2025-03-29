@@ -24,9 +24,9 @@ func main() {
 			c.Succ("bind 500")
 		})
 
-		s.BindCode(200, func(c fiber.Ctx, body io.Reader) {
-			c.Succ("bind 200")
-		})
+		//s.BindCode(200, func(c fiber.Ctx, body io.Reader) {
+		//	c.Succ("bind 200")
+		//})
 
 		s.Group("/api", func(g fiber.Grouper) {
 			g.ALL("/test", func(c fiber.Ctx) {

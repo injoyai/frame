@@ -53,7 +53,6 @@ func New(use ...Middle) *Server {
 			switch e := err.(type) {
 			case in.Writer:
 				if val, ok := bindCode[e.StatusCode()]; ok {
-					c.Response().ResetBody()
 					cc := NewCtx(c, _group.Respondent)
 					defer cc.free()
 					val(cc, e)
@@ -63,7 +62,6 @@ func New(use ...Middle) *Server {
 			case *fiber.Error:
 				//相应自定义的绑定
 				if val, ok := bindCode[e.Code]; ok {
-					c.Response().ResetBody()
 					cc := NewCtx(c, _group.Respondent)
 					defer cc.free()
 					val(cc, strings.NewReader(e.Message))
