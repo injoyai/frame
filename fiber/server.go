@@ -1,13 +1,14 @@
 package fiber
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"io"
 	"net"
+	"strings"
 )
 
 type (
@@ -41,23 +42,31 @@ func Default() *Server {
 }
 
 func New(use ...Middle) *Server {
-	bindErr := make(map[int]func(c Ctx, err *Error))
+	bindCode := make(map[int]func(c Ctx, body io.Reader))
 	_group := &group{
 		Router:     nil,
 		Respondent: in.DefaultClient,
 	}
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c fiber.Ctx, err error) error {
-			defer func() {
-				dealRecover(c, recover())
-			}()
-			var e *fiber.Error
-			if errors.As(err, &e) {
-				//相应自定义的绑定
-				if val, ok := bindErr[e.Code]; ok {
+			defer func() { dealRecover(c, recover()) }()
+			switch e := err.(type) {
+			case in.Writer:
+				if val, ok := bindCode[e.StatusCode()]; ok {
+					c.Response().ResetBody()
 					cc := NewCtx(c, _group.Respondent)
 					defer cc.free()
 					val(cc, e)
+					val = nil
+					return nil
+				}
+			case *fiber.Error:
+				//相应自定义的绑定
+				if val, ok := bindCode[e.Code]; ok {
+					c.Response().ResetBody()
+					cc := NewCtx(c, _group.Respondent)
+					defer cc.free()
+					val(cc, strings.NewReader(e.Message))
 					val = nil
 					return nil
 				}
@@ -70,10 +79,10 @@ func New(use ...Middle) *Server {
 	})
 	_group.Router = app.Group("")
 	ser := &Server{
-		port:    frame.DefaultPort,
-		App:     app,
-		Grouper: _group,
-		bindErr: bindErr,
+		port:     frame.DefaultPort,
+		App:      app,
+		Grouper:  _group,
+		bindCode: bindCode,
 	}
 	ser.Use(WithRecover())
 	ser.Use(use...)
@@ -84,12 +93,12 @@ type Server struct {
 	port int //端口
 	App  *fiber.App
 	Grouper
-	bindErr map[int]func(c Ctx, err *Error)
+	bindCode map[int]func(c Ctx, body io.Reader)
 }
 
-// BindErr 重置响应数据
-func (this *Server) BindErr(code int, f func(c Ctx, err *Error)) {
-	this.bindErr[code] = f
+// BindCode 重置响应数据
+func (this *Server) BindCode(code int, f func(c Ctx, body io.Reader)) {
+	this.bindCode[code] = f
 }
 
 func (this *Server) Close() error {

@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	rec "github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
@@ -46,17 +47,6 @@ func WithRecover() HandlerBase {
 		EnableStackTrace:  true,
 		StackTraceHandler: dealRecover,
 	})
-}
-
-func WithCode(code int, f func(c fiber.Ctx) error) HandlerBase {
-	return func(c fiber.Ctx) error {
-		if c.Response().StatusCode() == code {
-			if err := f(c); err != nil {
-				return err
-			}
-		}
-		return c.Next()
-	}
 }
 
 func WithPprof() HandlerBase {
@@ -158,4 +148,8 @@ func WithCache() HandlerBase {
 		}
 		return c.Next()
 	}
+}
+
+func WithStatic(root string) HandlerBase {
+	return static.New(root)
 }
