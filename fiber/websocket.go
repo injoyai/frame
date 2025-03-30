@@ -61,6 +61,11 @@ func (this *Websocket) Write(p []byte) (int, error) {
 	return len(p), err
 }
 
+func (this *Websocket) WriteText(s string) (int, error) {
+	err := this.WriteMessage(WSText, []byte(s))
+	return len(s), err
+}
+
 // WriteChan 从chan中读取,并写入到ws
 func (this *Websocket) WriteChan(c chan interface{}, messageType ...int) error {
 	mt := WSText

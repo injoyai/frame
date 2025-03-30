@@ -1,15 +1,11 @@
 package main
 
 import (
-	"embed"
-	"github.com/gofiber/websocket/v2"
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle/in"
 	"io"
+	"time"
 )
-
-//go:embed dist/*
-var dist embed.FS
 
 func main() {
 
@@ -42,10 +38,17 @@ func main() {
 		g.ALL("/500", func(c fiber.Ctx) {
 			in.Text(500, "500")
 		})
-
-		g.ALL("/ws", websocket.New(func(conn *websocket.Conn) {
-
-		}))
+		g.ALL("/ws", func(c fiber.Ctx) {
+			c.OnWebsocket(func(conn *fiber.Websocket) {
+				for {
+					<-time.After(time.Second * 3)
+					_, err := conn.WriteText("hello")
+					if err != nil {
+						return
+					}
+				}
+			})
+		})
 
 	})
 	s.Use(fiber.WithStatic("./example/testfiber/dist"))

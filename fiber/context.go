@@ -58,11 +58,12 @@ func (this *ctx) free() {
 }
 
 func (this *ctx) OnWebsocket(handler func(conn *Websocket)) {
+	ctx := this.Ctx.Context()
 	err := DefaultUpgrader.Upgrade(this.Ctx.RequestCtx(), func(c *websocket.Conn) {
 		defer c.Close()
 		handler(&Websocket{
 			Conn: c,
-			ctx:  this.Ctx.Context(),
+			ctx:  ctx,
 		})
 	})
 	this.CheckErr(err)
