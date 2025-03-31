@@ -39,8 +39,8 @@ type Request struct {
 	Writer http.ResponseWriter
 	*http.Request
 	conv.Extend
-	QueryForm url.Values             //解析后的query参数
-	JsonFrom  map[string]interface{} //解析body后的json
+	QueryForm url.Values     //解析后的query参数
+	JsonFrom  map[string]any //解析body后的json
 	cache     *maps.Safe
 	body      *[]byte
 }
@@ -68,7 +68,7 @@ func (this *Request) GetRequest() *http.Request {
 	return this.Request
 }
 
-func (this *Request) SetCache(key string, value interface{}) {
+func (this *Request) SetCache(key string, value any) {
 	if this.cache == nil {
 		this.cache = maps.NewSafe()
 	}
@@ -82,7 +82,7 @@ func (this *Request) GetCache(key string) *conv.Var {
 	return this.cache.GetVar(key)
 }
 
-func (this *Request) Parse(ptr interface{}) {
+func (this *Request) Parse(ptr any) {
 	if this == nil || this.Request == nil {
 		return
 	}
@@ -92,7 +92,7 @@ func (this *Request) Parse(ptr interface{}) {
 		//通过form-data解析
 		if this.Request.Form == nil {
 			if this.Request.ParseMultipartForm(1<<20) == nil {
-				m := map[string]interface{}{}
+				m := map[string]any{}
 				for k, v := range this.Request.Form {
 					m[k] = v[0]
 				}
@@ -147,11 +147,11 @@ func (this *Request) GetVar(key string) *conv.Var {
 	return this.GetCache(key)
 }
 
-func (this *Request) GetQueryGMap() map[string]interface{} {
+func (this *Request) GetQueryGMap() map[string]any {
 	if this == nil || this.Request == nil {
 		return nil
 	}
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	for k, v := range this.QueryForm {
 		if len(v) == 0 {
 			continue
@@ -210,11 +210,11 @@ func (this *Request) GetBodyVar(key string) *conv.Var {
 	return conv.New(ls[0])
 }
 
-func (this *Request) GetHeaderGMap() map[string]interface{} {
+func (this *Request) GetHeaderGMap() map[string]any {
 	if this == nil || this.Request == nil {
 		return nil
 	}
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	for k, v := range this.Request.Header {
 		if len(v) == 0 {
 			continue
@@ -247,11 +247,11 @@ func (this *Request) Write(p []byte) (int, error) {
 	return this.Writer.Write(p)
 }
 
-func (this *Request) WriteJson(v interface{}) error {
+func (this *Request) WriteJson(v any) error {
 	return json.NewEncoder(this.Writer).Encode(v)
 }
 
-func (this *Request) WriteAny(v interface{}) error {
+func (this *Request) WriteAny(v any) error {
 	_, err := this.Writer.Write(conv.Bytes(v))
 	return err
 }

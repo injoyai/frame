@@ -48,7 +48,7 @@ func WithLog() Option {
 	}
 }
 
-func WithPing(content ...interface{}) Option {
+func WithPing(content ...any) Option {
 	return func(s *Server) {
 		s.GET("/ping", func(r *Request) {
 			if len(content) > 0 {

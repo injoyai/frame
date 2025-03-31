@@ -9,7 +9,7 @@ import (
 var DefaultClient = New(WithDefault())
 
 // SetCacheByHandler 尝试从缓存中获取数据,如果不存在则通过函数获取,执行函数时,其他相同的key会等待此次结果
-func SetCacheByHandler(key any, handler func() any, expiration time.Duration) interface{} {
+func SetCacheByHandler(key any, handler func() any, expiration time.Duration) any {
 	value, err := DefaultClient.Cache().GetOrSetByHandler(key, func() (any, error) { return handler(), nil }, expiration)
 	DefaultClient.CheckErr(err)
 	return value

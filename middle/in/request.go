@@ -193,7 +193,7 @@ func (this *Request) GetFile(name string) io.ReadCloser {
 	return f
 }
 
-func (this *Request) ParseJsonBody(ptr interface{}) {
+func (this *Request) ParseJsonBody(ptr any) {
 	defer this.Body.Close()
 	bs, err := io.ReadAll(this.Body)
 	CheckErr(err)
@@ -202,7 +202,7 @@ func (this *Request) ParseJsonBody(ptr interface{}) {
 	}
 }
 
-func (this *Request) ParseBody(ptr interface{}) {
+func (this *Request) ParseBody(ptr any) {
 	if strings.Contains(this.Header.Get("Content-Type"), "application/json") {
 		defer this.Body.Close()
 		bs, err := io.ReadAll(this.Body)
@@ -223,7 +223,7 @@ func (this *Request) ParseBody(ptr interface{}) {
 	}
 }
 
-func (this *Request) Parse(ptr interface{}) {
+func (this *Request) Parse(ptr any) {
 	if this == nil || this.Request == nil {
 		return
 	}

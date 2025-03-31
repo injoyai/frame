@@ -32,13 +32,15 @@ func (this *group) SetRespondent(r in.Respondent) {
 
 func (this *group) Use(use ...Middle) {
 	for _, v := range use {
-		this.Router.Use(this.transfer(v))
+		switch f := v.(type) {
+		case func(c in.Client):
+			f(this.Respondent.(in.Client))
+		case func(e Writer):
+			this.Respondent.(in.Client).SetWriterOption(f)
+		default:
+			this.Router.Use(this.transfer(v))
+		}
 	}
-}
-
-func (this *group) Group(path string, handler func(g Grouper)) {
-	g := this.Router.Group(path)
-	handler(&group{Router: g, Respondent: this.Respondent})
 }
 
 func (this *group) transfer(handler Handler) HandlerBase {
@@ -58,17 +60,14 @@ func (this *group) transfer(handler Handler) HandlerBase {
 			f(cc)
 		case func(r Respondent):
 			f(this.Respondent)
-		case in.Option:
-			f(this.Respondent.(in.Client))
-		case func(c in.Client):
-			f(this.Respondent.(in.Client))
-		case WriterOption:
-			this.Respondent.(in.Client).SetWriterOption(f)
-		case func(e Writer):
-			this.Respondent.(in.Client).SetWriterOption(f)
 		}
 		return
 	}
+}
+
+func (this *group) Group(path string, handler func(g Grouper)) {
+	g := this.Router.Group(path)
+	handler(&group{Router: g, Respondent: this.Respondent})
 }
 
 func (this *group) ALL(path string, handler Handler) {

@@ -67,7 +67,7 @@ func (this *Websocket) WriteText(s string) (int, error) {
 }
 
 // WriteChan 从chan中读取,并写入到ws
-func (this *Websocket) WriteChan(c chan interface{}, messageType ...int) error {
+func (this *Websocket) WriteChan(c chan any, messageType ...int) error {
 	mt := WSText
 	if len(messageType) > 0 {
 		mt = messageType[0]
