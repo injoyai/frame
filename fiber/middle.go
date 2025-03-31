@@ -64,23 +64,23 @@ func WithCORS() HandlerBase {
 	}
 }
 
-func WithSwagger(s *middle.Swagger) HandlerBase {
-	return func(c fiber.Ctx) error {
+func WithSwagger(s *middle.Swagger) Handler {
+	return func(c Ctx) error {
 		switch string(c.Request().URI().Path()) {
 		case s.IndexPath:
-			in.Text200(fmt.Sprintf(middle.DefaultSwaggerUI, s.JsonPath))
+			c.Text200(fmt.Sprintf(middle.DefaultSwaggerUI, s.JsonPath))
 		case s.JsonPath:
-			in.FileLocal("json", s.Filename)
+			c.FileLocal("json", s.Filename)
 		}
 		return c.Next()
 	}
 }
 
-func WithPing() HandlerBase {
-	return func(c fiber.Ctx) error {
+func WithPing() Handler {
+	return func(c Ctx) error {
 		switch c.Path() {
 		case "/ping":
-			in.Succ("pong")
+			c.Succ("pong")
 		}
 		return c.Next()
 	}
@@ -90,37 +90,39 @@ func WithLog() HandlerBase {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			frame.Log.Printf("%-7s 耗时:%-9s %s  \n", c.Method(), time.Now().Sub(start), c.Path())
+			frame.Log.Printf("%-7s 响应:%-3d   耗时:%-9s %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}
 }
 
 func WithEmbed(apiPrefix, filePrefix string, e embed.FS) Handler {
-	return func(c fiber.Ctx) error {
-		filename, _ := strings.CutPrefix(c.Path(), apiPrefix)
-		f, err := e.Open(path.Join(filePrefix, filename))
-		if os.IsNotExist(err) {
-			return c.Next()
-		}
-		in.CheckErr(err)
-		defer f.Close()
-		in.Html200(f)
-		return nil
-	}
+	return WithFS(apiPrefix, filePrefix, e)
 }
 
 func WithFS(apiPrefix, filePrefix string, fs fs.FS) HandlerBase {
 	return func(c fiber.Ctx) error {
-		filename, _ := strings.CutPrefix(c.Path(), apiPrefix)
+		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
+		if !ok {
+			return c.Next()
+		}
+		if filename == "/" || filename == "" {
+			filename = "/index.html"
+		}
 		f, err := fs.Open(path.Join(filePrefix, filename))
 		if os.IsNotExist(err) {
 			return c.Next()
 		}
-		in.CheckErr(err)
+		if err != nil {
+			return err
+		}
 		defer f.Close()
-		in.Html200(f)
-		return nil
+		bs, err := io.ReadAll(f)
+		if err != nil {
+			return err
+		}
+		_, err = c.Status(fiber.StatusOK).Write(bs)
+		return err
 	}
 }
 

@@ -55,10 +55,6 @@ type writer struct {
 	io.Writer                 //写入body
 }
 
-func (this *writer) Error() string {
-	return "未使用中间件in.Recover"
-}
-
 func (this *writer) StatusCode() int {
 	return this.code
 }

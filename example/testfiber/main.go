@@ -1,11 +1,15 @@
 package main
 
 import (
+	"embed"
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle/in"
 	"io"
 	"time"
 )
+
+//go:embed dist/*
+var dist embed.FS
 
 func main() {
 
@@ -51,7 +55,8 @@ func main() {
 		})
 
 	})
-	s.Use(fiber.WithStatic("./example/testfiber/dist"))
+	s.Use(fiber.WithEmbed("/dist", "dist", dist))
+	s.Use(fiber.WithStatic("./example/testfiber/dist/"))
 
 	s.Run()
 

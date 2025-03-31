@@ -48,11 +48,11 @@ func (this *group) transfer(handler Handler) HandlerBase {
 			err = f(ctx)
 		case func(ctx fiber.Ctx):
 			f(ctx)
-		case func(ctx Ctx) error:
+		case func(Ctx) error:
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
 			err = f(cc)
-		case func(ctx Ctx):
+		case func(Ctx):
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
 			f(cc)
