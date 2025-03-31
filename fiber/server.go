@@ -21,7 +21,7 @@ type (
 		func(c Ctx) error
 		func(c fiber.Ctx)
 		func(c fiber.Ctx) error
-		func(r in.Respondent)
+		func(r Respondent)
 		func(c in.Client)
 		func(e *in.Exit)
 	*/

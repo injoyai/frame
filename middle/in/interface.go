@@ -9,16 +9,16 @@ import (
 type Client interface {
 	Recover(h http.Handler) http.Handler
 	RecoverFunc(f http.HandlerFunc) http.Handler
-	RecoverWriter(e interface{}, w http.ResponseWriter)
+	RecoverWriter(e any, w http.ResponseWriter)
 	Bind(path string, handler http.HandlerFunc)
 	SetWriterOption(f ...WriterOption)
-	SetHandlerWithCode(succ, fail, unauthorized, forbidden interface{})
+	SetHandlerWithCode(succ, fail, unauthorized, forbidden any)
 	Proxy(w http.ResponseWriter, r *http.Request, uri string)
 	Cache() *maps.Safe
-	NewSuccWithCode(code interface{}) func(data interface{}, count ...int64)
-	NewFailWithCode(code interface{}) func(msg interface{})
-	NewUnauthorizedWithCode(code interface{}) func()
-	NewForbiddenWithCode(code interface{}) func()
+	NewSuccWithCode(code any) func(data any, count ...int64)
+	NewFailWithCode(code any) func(msg any)
+	NewUnauthorizedWithCode(code any) func()
+	NewForbiddenWithCode(code any) func()
 
 	Respondent
 }
@@ -62,5 +62,6 @@ type Respondent interface {
 	Forbidden()
 	Err(data any)
 	CheckErr(err error, failMsg ...string)
+	NewWriter(code int, i IMarshal) Writer
 	Exit()
 }

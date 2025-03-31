@@ -134,8 +134,8 @@ func (this *client) Redirect308(addr string) {
 }
 
 // NewWriter 自定义退出
-func (this *client) NewWriter(httpCode int, i IMarshal) Writer {
-	return NewWriter(httpCode, i, this.writerOptions...)
+func (this *client) NewWriter(code int, i IMarshal) Writer {
+	return NewWriter(code, i, this.writerOptions...)
 }
 
 // Exit 直接退出,设置的跨域啥的应该是无效的

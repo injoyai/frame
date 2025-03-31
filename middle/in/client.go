@@ -27,8 +27,8 @@ type client struct {
 	cache         *maps.Safe
 	writerOptions []WriterOption
 	bind          map[string]http.HandlerFunc //自定义接口绑定
-	succ          func(data interface{}, count ...int64)
-	fail          func(data interface{})
+	succ          func(data any, count ...int64)
+	fail          func(data any)
 	unauthorized  func()
 	forbidden     func()
 }
@@ -41,7 +41,7 @@ func (this *client) Cache() *maps.Safe {
 }
 
 // SetHandlerWithCode 设置响应成功失败等
-func (this *client) SetHandlerWithCode(succ, fail, unauthorized, forbidden interface{}) {
+func (this *client) SetHandlerWithCode(succ, fail, unauthorized, forbidden any) {
 	this.succ = this.NewSuccWithCode(succ)
 	this.fail = this.NewFailWithCode(fail)
 	this.unauthorized = this.NewUnauthorizedWithCode(unauthorized)
@@ -107,7 +107,7 @@ func (this *client) RecoverFunc(f http.HandlerFunc) http.Handler {
 }
 
 // RecoverWriter 例gf等web框架只需要这一半即可,但是Bind会失效
-func (this *client) RecoverWriter(e interface{}, w http.ResponseWriter) {
+func (this *client) RecoverWriter(e any, w http.ResponseWriter) {
 	switch w2 := e.(type) {
 	case Writer:
 		w2.WriteTo(w)
