@@ -26,8 +26,8 @@ type Ctx interface {
 	// Parse 解析body数据到ptr,需要指针类型
 	Parse(ptr any)
 
-	// OnWebsocket websocket
-	OnWebsocket(handler func(conn *Websocket))
+	// Websocket websocket
+	Websocket(handler func(conn *Websocket))
 
 	// free 释放内存
 	free()
@@ -57,12 +57,12 @@ func (this *ctx) free() {
 	ctxPoll.Put(this)
 }
 
-func (this *ctx) OnWebsocket(handler func(conn *Websocket)) {
+func (this *ctx) Websocket(handler func(ws *Websocket)) {
 	ctx := this.Ctx.Context()
-	err := DefaultUpgrader.Upgrade(this.Ctx.RequestCtx(), func(c *websocket.Conn) {
-		defer c.Close()
+	err := DefaultUpgrader.Upgrade(this.Ctx.RequestCtx(), func(ws *websocket.Conn) {
+		defer ws.Close()
 		handler(&Websocket{
-			Conn: c,
+			Conn: ws,
 			ctx:  ctx,
 		})
 	})

@@ -56,10 +56,10 @@ func main() {
 			r.Succ("respondent")
 		})
 		g.ALL("/ws", func(c fiber.Ctx) {
-			c.OnWebsocket(func(conn *fiber.Websocket) {
+			c.Websocket(func(ws *fiber.Websocket) {
 				for {
 					<-time.After(time.Second * 3)
-					_, err := conn.WriteText("hello")
+					_, err := ws.WriteText("hello")
 					if err != nil {
 						return
 					}
