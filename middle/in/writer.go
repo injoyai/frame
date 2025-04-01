@@ -2,9 +2,12 @@ package in
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/injoyai/conv"
 	"io"
 	"net/http"
 	"strings"
+	"unsafe"
 )
 
 type Writer interface {
@@ -13,6 +16,8 @@ type Writer interface {
 	StatusCode() int
 	Header() http.Header
 	Write(bs []byte) (int, error)
+	WriteAny(v any) error
+	WriteJson(v any) error
 	WriteHeader(code int)
 	AddHeader(i string, v ...string)
 	SetHeader(i string, v ...string)
@@ -89,6 +94,16 @@ func (this *writer) SetContentType(ct ...string) {
 
 func (this *writer) SetContentTypeJson() {
 	this.SetHeader("Content-Type", "application/json;charset=utf-8")
+}
+
+func (this *writer) WriteAny(v any) error {
+	s := conv.String(v)
+	_, err := this.Writer.Write(*(*[]byte)(unsafe.Pointer(&s)))
+	return err
+}
+
+func (this *writer) WriteJson(v any) error {
+	return json.NewEncoder(this.Writer).Encode(v)
 }
 
 func (this *writer) WriteTo(w http.ResponseWriter) {

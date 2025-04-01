@@ -23,7 +23,7 @@ func (this *Request) Websocket() *Websocket {
 		WriteBufferSize: 1024 * 2,
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
-	ws, err := up.Upgrade(this.Writer, this.Request, nil)
+	ws, err := up.Upgrade(this.Writer(), this.Request(), nil)
 	in.CheckErr(err)
 	return &Websocket{ctx: this.Context(), Conn: ws}
 }
