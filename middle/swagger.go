@@ -1,59 +1,44 @@
 package middle
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
+	"strings"
 )
 
 var DefaultSwagger = &Swagger{
-	IndexPath: "/swagger",
-	JsonPath:  "/swagger/swagger.json",
-	Filename:  "./docs/swagger.json",
-	UI:        DefaultSwaggerUI,
+	IndexPath:    "/swagger",
+	JsonPath:     "/swagger/swagger.json",
+	JsonFilename: "./docs/swagger.json",
+	UI:           DefaultSwaggerUI,
 }
 
 type Swagger struct {
-	IndexPath string //swagger的路由
-	JsonPath  string //json路由
-	Filename  string //json文件名称
-	UI        string //
+	IndexPath    string //swagger的路由
+	JsonPath     string //json路由
+	JsonFilename string //json文件名称
+	JsonBytes    []byte //文件流
+	UI           string //ui界面
 }
 
-func (this *Swagger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
+func (this *Swagger) Do(path string, f func(r io.Reader, contentType string, err error)) bool {
+	switch path {
 	case this.IndexPath:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(this.UI, this.JsonPath)))
+		r := strings.NewReader(fmt.Sprintf(this.UI, this.JsonPath))
+		f(r, "text/html", nil)
 	case this.JsonPath:
-		DefaultSwagger.WriteFile(w)
+		if this.JsonBytes != nil {
+			f(bytes.NewReader(this.JsonBytes), "application/json", nil)
+		} else {
+			file, err := os.Open(this.JsonFilename)
+			f(file, "application/json", err)
+		}
+	default:
+		return false
 	}
-}
-
-func (this *Swagger) Use(w http.ResponseWriter, r *http.Request) bool {
-	switch r.URL.Path {
-	case this.IndexPath:
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(this.UI, this.JsonPath)))
-		return true
-	case this.JsonPath:
-		DefaultSwagger.WriteFile(w)
-		return true
-	}
-	return false
-}
-
-func (this *Swagger) WriteFile(w http.ResponseWriter) {
-	f, err := os.Open(this.Filename)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	defer f.Close()
-	w.WriteHeader(http.StatusOK)
-	io.Copy(w, f)
+	return true
 }
 
 var (

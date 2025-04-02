@@ -3,7 +3,6 @@ package fiber
 import (
 	"embed"
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	rec "github.com/gofiber/fiber/v3/middleware/recover"
@@ -64,14 +63,15 @@ func WithCORS() HandlerBase {
 	}
 }
 
-func WithSwagger(s *middle.Swagger) Handler {
+func WithSwagger(swag *middle.Swagger) Handler {
 	return func(c Ctx) error {
-		switch string(c.Request().URI().Path()) {
-		case s.IndexPath:
-			c.Text200(fmt.Sprintf(middle.DefaultSwaggerUI, s.JsonPath))
-		case s.JsonPath:
-			c.FileLocal("json", s.Filename)
-		}
+		swag.Do(
+			string(c.Request().URI().Path()),
+			func(r io.Reader, contentType string, err error) {
+				c.CheckErr(err)
+				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
+			},
+		)
 		return c.Next()
 	}
 }

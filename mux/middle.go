@@ -1,9 +1,12 @@
 package mux
 
 import (
+	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"io"
+	"net/http"
 	"time"
 )
 
@@ -29,9 +32,10 @@ func WithCORS() Option {
 // WithSwagger 设置swagger
 func WithSwagger(swag *middle.Swagger) Handler {
 	return func(c Ctx) {
-		if swag.Use(c.Writer(), c.Request()) {
-			c.Exit()
-		}
+		swag.Do(c.Request().URL.Path, func(r io.Reader, contentType string, err error) {
+			c.CheckErr(err)
+			c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
+		})
 		c.Next()
 	}
 }
