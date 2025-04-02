@@ -21,13 +21,23 @@ type (
 		func(c Ctx) error
 		func(c fiber.Ctx)
 		func(c fiber.Ctx) error
+		func(r Requester)
 		func(r Respondent)
-		func(c in.Client)
-		func(e *in.Exit)
 	*/
 	Handler = any
 
-	Middle = Handler
+	/*
+		Middle 支持以下类型
+		func(c Ctx)
+		func(c Ctx) error
+		func(c fiber.Ctx)
+		func(c fiber.Ctx) error
+		func(r Requester)
+		func(r Respondent)
+		func(c in.Client)
+		func(e in.Writer)
+	*/
+	Middle = any
 )
 
 func Default() *Server {
