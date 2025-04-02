@@ -5,6 +5,7 @@ import (
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/logs"
 	"io"
 	"time"
 )
@@ -54,6 +55,12 @@ func main() {
 		})
 		g.ALL("/respondent", func(r fiber.Respondent) {
 			r.Succ("respondent")
+		})
+		g.ALL("/requester", func(r fiber.Requester) {
+			logs.Debug(r.GetString("key"))
+		})
+		g.ALL("/:key", func(c fiber.Ctx) {
+			c.Succ(c.GetString("key"))
 		})
 		g.ALL("/ws", func(c fiber.Ctx) {
 			c.Websocket(func(ws *fiber.Websocket) {

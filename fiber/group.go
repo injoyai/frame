@@ -60,6 +60,10 @@ func (this *group) transfer(handler Handler) HandlerBase {
 			f(cc)
 		case func(r Respondent):
 			f(this.Respondent)
+		case func(r Requester):
+			cc := NewCtx(ctx, this.Respondent)
+			defer cc.free()
+			f(cc)
 		}
 		return
 	}
