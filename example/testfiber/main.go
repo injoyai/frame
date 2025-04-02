@@ -15,8 +15,12 @@ import (
 var dist embed.FS
 
 func main() {
-	middle.DefaultSwagger.JsonFilename = "./example/testfiber/docs/swagger.json"
-	s := fiber.Default()
+	s := fiber.Default(fiber.WithSwagger(&middle.Swagger{
+		IndexPath:    "/swagger",
+		JsonPath:     "/swagger/swagger.json",
+		JsonFilename: "./example/testfiber/docs/swagger.json",
+		UI:           middle.DefaultSwaggerUI,
+	}))
 	s.SetPort(frame.DefaultPort)
 
 	s.BindCode(404, func(c fiber.Ctx, body io.Reader) {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
-	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
 	"io"
 	"net"
@@ -40,15 +39,16 @@ type (
 	Middle = any
 )
 
-func Default() *Server {
-	return New(
+func Default(use ...Middle) *Server {
+	op := []Middle{
 		WithLog(),
 		WithPprof(),
 		WithCORS(),
 		WithRecover(),
 		WithPing(),
-		WithSwagger(middle.DefaultSwagger),
-	)
+	}
+	op = append(op, use...)
+	return New(op)
 }
 
 func New(use ...Middle) *Server {
