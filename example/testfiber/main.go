@@ -4,6 +4,7 @@ import (
 	"embed"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/fiber"
+	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/injoyai/logs"
 	"io"
@@ -14,7 +15,7 @@ import (
 var dist embed.FS
 
 func main() {
-
+	middle.DefaultSwagger.JsonFilename = "./example/testfiber/docs/swagger.json"
 	s := fiber.Default()
 	s.SetPort(frame.DefaultPort)
 

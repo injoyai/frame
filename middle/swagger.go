@@ -23,22 +23,31 @@ type Swagger struct {
 	UI           string //ui界面
 }
 
-func (this *Swagger) Do(path string, f func(r io.Reader, contentType string, err error)) bool {
+func (this *Swagger) Do(path string, f func(r io.Reader, contentType string)) (bool, error) {
 	switch path {
 	case this.IndexPath:
 		r := strings.NewReader(fmt.Sprintf(this.UI, this.JsonPath))
-		f(r, "text/html", nil)
+		f(r, "text/html")
+
 	case this.JsonPath:
-		if this.JsonBytes != nil {
-			f(bytes.NewReader(this.JsonBytes), "application/json", nil)
-		} else {
+		if this.JsonBytes == nil {
 			file, err := os.Open(this.JsonFilename)
-			f(file, "application/json", err)
+			if err != nil {
+				return false, err
+			}
+			defer file.Close()
+			if this.JsonBytes, err = io.ReadAll(file); err != nil {
+				return false, err
+			}
 		}
+		f(bytes.NewReader(this.JsonBytes), "application/json")
+
 	default:
-		return false
+		return false, nil
+
 	}
-	return true
+
+	return true, nil
 }
 
 var (

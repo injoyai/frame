@@ -65,13 +65,13 @@ func WithCORS() HandlerBase {
 
 func WithSwagger(swag *middle.Swagger) Handler {
 	return func(c Ctx) error {
-		swag.Do(
+		_, err := swag.Do(
 			string(c.Request().URI().Path()),
-			func(r io.Reader, contentType string, err error) {
-				c.CheckErr(err)
+			func(r io.Reader, contentType string) {
 				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
 			},
 		)
+		c.CheckErr(err)
 		return c.Next()
 	}
 }

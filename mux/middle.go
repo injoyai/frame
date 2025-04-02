@@ -32,10 +32,10 @@ func WithCORS() Option {
 // WithSwagger 设置swagger
 func WithSwagger(swag *middle.Swagger) Handler {
 	return func(c Ctx) {
-		swag.Do(c.Request().URL.Path, func(r io.Reader, contentType string, err error) {
-			c.CheckErr(err)
+		_, err := swag.Do(c.Request().URL.Path, func(r io.Reader, contentType string) {
 			c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
 		})
+		c.CheckErr(err)
 		c.Next()
 	}
 }
