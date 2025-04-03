@@ -70,7 +70,6 @@ func (this *ctx) Get(key string, defaultValue ...string) string {
 
 func (this *ctx) GetVar(key string) *conv.Var {
 	//尝试从query中获取数据
-
 	if val := this.Ctx.RequestCtx().QueryArgs().Peek(key); val != nil {
 		return conv.New(val)
 	}
