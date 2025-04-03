@@ -86,7 +86,7 @@ func main() {
 		})
 	})
 	s.Use(fiber.WithEmbed("/dist", "dist", dist))
-	//s.Use(fiber.WithStatic("./example/fiber/dist/"))
+	s.Use(fiber.WithStatic("./example/fiber/dist/"))
 
 	s.Run()
 
