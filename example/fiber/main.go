@@ -26,11 +26,9 @@ func main() {
 
 	s.Use(
 		fiber.BindCode(500, func(c fiber.Ctx) {
-			c.Response().ResetBody()
 			c.Succ("bind 500-2")
 		}),
 		fiber.BindCode(404, func(c fiber.Ctx) {
-			c.Response().ResetBody()
 			c.Text(404, "page not find")
 		}),
 		fiber.WithRecover(),

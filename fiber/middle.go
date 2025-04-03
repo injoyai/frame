@@ -33,6 +33,7 @@ func dealRecover(c fiber.Ctx, e any) {
 		if w.StatusCode() >= 0 {
 			c.Status(w.StatusCode())
 		}
+		c.Response().ResetBody()
 		io.Copy(c, w)
 	default:
 		c.Status(http.StatusInternalServerError)
