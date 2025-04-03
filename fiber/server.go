@@ -1,6 +1,7 @@
 package fiber
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
@@ -60,27 +61,22 @@ func New(use ...Middle) *Server {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			defer func() { dealRecover(c, recover()) }()
-			switch e := err.(type) {
-			case in.Writer:
-				if val, ok := bindCode[e.StatusCode()]; ok {
-					cc := NewCtx(c, _group.Respondent)
-					defer cc.free()
-					val(cc, e)
-					val = nil
-					return nil
+			code := c.Response().StatusCode()
+			if val, ok := bindCode[code]; ok {
+				var r io.Reader
+				switch e := err.(type) {
+				case in.Writer:
+					r = e
+				case *fiber.Error:
+					r = strings.NewReader(e.Message)
+				default:
+					r = bytes.NewReader(c.Response().Body())
 				}
-			case *fiber.Error:
-				//相应自定义的绑定
-				if val, ok := bindCode[e.Code]; ok {
-					cc := NewCtx(c, _group.Respondent)
-					defer cc.free()
-					val(cc, strings.NewReader(e.Message))
-					val = nil
-					return nil
-				}
-				return c.Status(e.Code).SendString(e.Message)
+				cc := NewCtx(c, _group.Respondent)
+				defer cc.free()
+				val(cc, r)
+				val = nil
 			}
-			//相应成功
 			return nil
 		},
 		DisableDefaultContentType: true,
