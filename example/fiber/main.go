@@ -20,7 +20,7 @@ func main() {
 	s := fiber.Default(fiber.WithSwagger(&middle.Swagger{
 		IndexPath:    "/swagger",
 		JsonPath:     "/swagger/swagger.json",
-		JsonFilename: "./example/testfiber/docs/swagger.json",
+		JsonFilename: "./example/fiber/docs/swagger.json",
 		UI:           middle.DefaultSwaggerUI,
 	}))
 	s.SetPort(frame.DefaultPort)
@@ -91,7 +91,7 @@ func main() {
 		})
 	})
 	s.Use(fiber.WithEmbed("/dist", "dist", dist))
-	s.Use(fiber.WithStatic("./example/testfiber/dist/"))
+	s.Use(fiber.WithStatic("./example/fiber/dist/"))
 
 	s.Run()
 
