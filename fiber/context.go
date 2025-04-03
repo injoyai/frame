@@ -18,6 +18,7 @@ type (
 )
 
 var (
+	// _nil 复用空值的*conv.Var,切记不能修改值
 	_nil = conv.Nil()
 )
 
@@ -26,11 +27,20 @@ var ctxPoll = sync.Pool{New: func() any {
 }}
 
 type Ctx interface {
+
+	// Ctx fiber.Ctx接口
 	fiber.Ctx
+
+	// Requester 请求接口
 	Requester
+
+	// Respondent 响应接口
 	in.Respondent
 
+	// SetHeader 设置响应头
 	SetHeader(k, v string)
+
+	// SetContentType 设置响应头content-type
 	SetContentType(contentType string)
 
 	// Parse 解析body数据到ptr,需要指针类型
@@ -39,9 +49,10 @@ type Ctx interface {
 	// Websocket websocket
 	Websocket(handler func(conn *Websocket))
 
+	// SSE server sent event
 	SSE(handler func(w SSE))
 
-	// Stream stream
+	// Stream 流式传输
 	Stream(handler func(w *bufio.Writer))
 
 	// free 释放内存
@@ -64,10 +75,12 @@ type ctx struct {
 	bodyMap       *conv.Map
 }
 
+// Get 解决Ctx和Extend的方法冲突
 func (this *ctx) Get(key string, defaultValue ...string) string {
 	return this.Ctx.Get(key, defaultValue...)
 }
 
+// GetVar 实现conv.IGetVar接口
 func (this *ctx) GetVar(key string) *conv.Var {
 	//尝试从query中获取数据
 	if val := this.Ctx.RequestCtx().QueryArgs().Peek(key); val != nil {
@@ -154,10 +167,6 @@ func (this *ctx) free() {
 	this.requestHeader = nil
 	this.bodyMap = nil
 	ctxPoll.Put(this)
-}
-
-func (this *ctx) WriteHeader(statusCode int) {
-	this.Ctx.Status(statusCode)
 }
 
 /*
