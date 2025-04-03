@@ -93,7 +93,7 @@ func WithLog() HandlerBase {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			frame.Log.Printf("%-7s 响应:%-3d   耗时:%-9s %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
+			frame.Log.Printf("| %-7s | %-3d   | %-9s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}

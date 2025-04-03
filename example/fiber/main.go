@@ -26,10 +26,10 @@ func main() {
 
 	s.Use(
 		fiber.BindCode(500, func(c fiber.Ctx) {
-			c.Succ("bind 500-2")
+			c.Succ("bind 500")
 		}),
 		fiber.BindCode(404, func(c fiber.Ctx) {
-			c.Text(404, "page not find")
+			c.Text(404, "bind 404")
 		}),
 		fiber.WithRecover(),
 	)
