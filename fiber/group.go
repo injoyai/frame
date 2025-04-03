@@ -1,6 +1,7 @@
 package fiber
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame/middle/in"
 )
@@ -64,6 +65,14 @@ func (this *group) transfer(handler Handler) HandlerBase {
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
 			f(cc)
+		case []any:
+			for _, v := range f {
+				if err = this.transfer(v)(ctx); err != nil {
+					return
+				}
+			}
+		default:
+			panic(fmt.Sprintf("unknown handler/middle %T", handler))
 		}
 		return
 	}

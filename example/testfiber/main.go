@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle"
@@ -15,6 +16,7 @@ import (
 var dist embed.FS
 
 func main() {
+
 	s := fiber.Default(fiber.WithSwagger(&middle.Swagger{
 		IndexPath:    "/swagger",
 		JsonPath:     "/swagger/swagger.json",
@@ -64,9 +66,7 @@ func main() {
 		g.ALL("/requester", func(r fiber.Requester) {
 			logs.Debug(r.GetString("key"))
 		})
-		g.ALL("/:key", func(c fiber.Ctx) {
-			c.Succ(c.GetString("key"))
-		})
+
 		g.ALL("/ws", func(c fiber.Ctx) {
 			c.Websocket(func(ws *fiber.Websocket) {
 				for {
@@ -78,7 +78,17 @@ func main() {
 				}
 			})
 		})
-
+		g.ALL("/sse", func(c fiber.Ctx) {
+			c.SSE(func(w fiber.SSE) {
+				for i := 0; i < 10; i++ {
+					w.WriteString("data: " + conv.String(i))
+					<-time.After(time.Second)
+				}
+			})
+		})
+		g.ALL("/:key", func(c fiber.Ctx) {
+			c.Succ(c.GetString("key"))
+		})
 	})
 	s.Use(fiber.WithEmbed("/dist", "dist", dist))
 	s.Use(fiber.WithStatic("./example/testfiber/dist/"))

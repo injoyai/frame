@@ -1,6 +1,7 @@
 package fiber
 
 import (
+	"bufio"
 	"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/conv"
@@ -29,11 +30,19 @@ type Ctx interface {
 	Requester
 	in.Respondent
 
+	SetHeader(k, v string)
+	SetContentType(contentType string)
+
 	// Parse 解析body数据到ptr,需要指针类型
 	Parse(ptr any)
 
 	// Websocket websocket
 	Websocket(handler func(conn *Websocket))
+
+	SSE(handler func(w SSE))
+
+	// Stream stream
+	Stream(handler func(w *bufio.Writer))
 
 	// free 释放内存
 	free()
@@ -101,19 +110,17 @@ func (this *ctx) GetVar(key string) *conv.Var {
 	return _nil
 }
 
+func (this *ctx) SetHeader(k, v string) {
+	this.Ctx.Set(k, v)
+}
+
+func (this *ctx) SetContentType(contentType string) {
+	this.Ctx.Type(fiber.HeaderContentType, contentType)
+}
+
 func (this *ctx) Parse(ptr any) {
 	err := conv.Unmarshal(this.Ctx.Body(), ptr)
 	this.CheckErr(err)
-}
-
-// free 手动释放内存
-func (this *ctx) free() {
-	this.Ctx = nil
-	this.Respondent = nil
-	this.Extend = nil
-	this.requestHeader = nil
-	this.bodyMap = nil
-	ctxPoll.Put(this)
 }
 
 func (this *ctx) Websocket(handler func(ws *Websocket)) {
@@ -126,6 +133,28 @@ func (this *ctx) Websocket(handler func(ws *Websocket)) {
 		})
 	})
 	this.CheckErr(err)
+}
+
+func (this *ctx) Stream(handler func(w *bufio.Writer)) {
+	this.SetHeader(fiber.HeaderContentType, "text/event-stream")
+	this.SetHeader(fiber.HeaderCacheControl, "no-cache")
+	this.SetHeader(fiber.HeaderConnection, "keep-alive")
+	err := this.Ctx.SendStreamWriter(handler)
+	this.CheckErr(err)
+}
+
+func (this *ctx) SSE(handler func(sse SSE)) {
+	this.Stream(func(writer *bufio.Writer) { handler(&sse{Writer: writer}) })
+}
+
+// free 手动释放内存
+func (this *ctx) free() {
+	this.Ctx = nil
+	this.Respondent = nil
+	this.Extend = nil
+	this.requestHeader = nil
+	this.bodyMap = nil
+	ctxPoll.Put(this)
 }
 
 func (this *ctx) WriteHeader(statusCode int) {

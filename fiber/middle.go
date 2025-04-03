@@ -54,11 +54,11 @@ func WithPprof() HandlerBase {
 
 func WithCORS() HandlerBase {
 	return func(c fiber.Ctx) error {
-		c.Response().Header.Set("Access-Control-Allow-Origin", "*")
-		c.Response().Header.Set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")
-		c.Response().Header.Set("Access-Control-Allow-Credentials", "true")
-		c.Response().Header.Set("Access-Control-Allow-Headers", "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
-		c.Response().Header.Set("Access-Control-Allow-Max-Age", "3600")
+		c.Set("Access-Control-Allow-Origin", "*")
+		c.Set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")
+		c.Set("Access-Control-Allow-Credentials", "true")
+		c.Set("Access-Control-Allow-Headers", "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
+		c.Set("Access-Control-Allow-Max-Age", "3600")
 		return c.Next()
 	}
 }
@@ -71,6 +71,7 @@ func WithSwagger(swag *middle.Swagger) Handler {
 				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
 			},
 		)
+
 		c.CheckErr(err)
 		return c.Next()
 	}

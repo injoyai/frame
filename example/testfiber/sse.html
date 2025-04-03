@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div id="output" style="font-family: monospace; padding: 20px;"></div>
+
+<script>
+    const output = document.getElementById('output');
+    const es = new EventSource('http://localhost:8080/api/sse');
+
+    es.onmessage = e => {
+        output.innerHTML += e.data + '<br>';
+    };
+
+    es.onerror = () => {
+        output.innerHTML += '连接已断开';
+        es.close();
+    };
+</script>
+</body>
+</html>

@@ -48,7 +48,7 @@ func Default(use ...Middle) *Server {
 		WithPing(),
 	}
 	op = append(op, use...)
-	return New(op)
+	return New(op...)
 }
 
 func New(use ...Middle) *Server {
