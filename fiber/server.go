@@ -1,14 +1,12 @@
 package fiber
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle/in"
-	"io"
 	"net"
-	"strings"
 )
 
 type (
@@ -53,29 +51,15 @@ func Default(use ...Middle) *Server {
 }
 
 func New(use ...Middle) *Server {
-	bindCode := make(map[int]func(c Ctx, body io.Reader))
 	_group := &group{
 		Router:     nil,
 		Respondent: in.DefaultClient,
 	}
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c fiber.Ctx, err error) error {
-			defer func() { dealRecover(c, recover()) }()
-			code := c.Response().StatusCode()
-			if val, ok := bindCode[code]; ok {
-				var r io.Reader
-				switch e := err.(type) {
-				case in.Writer:
-					r = e
-				case *fiber.Error:
-					r = strings.NewReader(e.Message)
-				default:
-					r = bytes.NewReader(c.Response().Body())
-				}
-				cc := NewCtx(c, _group.Respondent)
-				defer cc.free()
-				val(cc, r)
-				val = nil
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				c.Status(e.Code).SendString(e.Message)
 			}
 			return nil
 		},
@@ -83,10 +67,9 @@ func New(use ...Middle) *Server {
 	})
 	_group.Router = app.Group("")
 	ser := &Server{
-		port:     frame.DefaultPort,
-		App:      app,
-		Grouper:  _group,
-		bindCode: bindCode,
+		port:    frame.DefaultPort,
+		App:     app,
+		Grouper: _group,
 	}
 	ser.Use(WithRecover())
 	ser.Use(use...)
@@ -97,12 +80,6 @@ type Server struct {
 	port int //端口
 	App  *fiber.App
 	Grouper
-	bindCode map[int]func(c Ctx, body io.Reader)
-}
-
-// BindCode 重置响应数据
-func (this *Server) BindCode(code int, f func(c Ctx, body io.Reader)) {
-	this.bindCode[code] = f
 }
 
 func (this *Server) Close() error {

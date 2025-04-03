@@ -3,6 +3,7 @@ package fiber
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	rec "github.com/gofiber/fiber/v3/middleware/recover"
@@ -27,7 +28,7 @@ func dealRecover(c fiber.Ctx, e any) {
 	case nil:
 	case in.Writer:
 		for i, v := range w.Header() {
-			c.Response().Header.Set(i, strings.Join(v, ","))
+			c.Set(i, strings.Join(v, ","))
 		}
 		if w.StatusCode() >= 0 {
 			c.Status(w.StatusCode())
@@ -155,4 +156,22 @@ func WithCache() HandlerBase {
 
 func WithStatic(root string) HandlerBase {
 	return static.New(root)
+}
+
+// BindCode 绑定响应状态码
+// 需要在WithRecover之前,才能改变状态码
+// 这个Bing可以让log打印准确状态,系统自带的是最后执行的,log打印不准
+func BindCode(code int, handler func(c Ctx)) Handler {
+	return func(c Ctx) {
+		defer func() {
+			if code == c.Response().StatusCode() {
+				handler(c)
+			}
+		}()
+		err := c.Next()
+		var e *fiber.Error
+		if errors.As(err, &e) {
+			c.Status(e.Code).SendString(e.Message)
+		}
+	}
 }

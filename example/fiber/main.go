@@ -8,7 +8,6 @@ import (
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/injoyai/logs"
-	"io"
 	"time"
 )
 
@@ -25,19 +24,17 @@ func main() {
 	}))
 	s.SetPort(frame.DefaultPort)
 
-	s.BindCode(404, func(c fiber.Ctx, body io.Reader) {
-		c.Succ("bind 404")
-	})
-
-	s.BindCode(500, func(c fiber.Ctx, body io.Reader) {
-		c.Response().ResetBody()
-		c.Succ("bind 500")
-	})
-
-	//s.BindCode(200, func(c fiber.Ctx, body io.Reader) {
-	//	c.Response().ResetBody()
-	//	c.Succ("bind 200")
-	//})
+	s.Use(
+		fiber.BindCode(500, func(c fiber.Ctx) {
+			c.Response().ResetBody()
+			c.Succ("bind 500-2")
+		}),
+		fiber.BindCode(404, func(c fiber.Ctx) {
+			c.Response().ResetBody()
+			c.Text(404, "page not find")
+		}),
+		fiber.WithRecover(),
+	)
 
 	s.Use(func(c in.Client) {
 		c.SetHandlerWithCode(
@@ -91,7 +88,7 @@ func main() {
 		})
 	})
 	s.Use(fiber.WithEmbed("/dist", "dist", dist))
-	s.Use(fiber.WithStatic("./example/fiber/dist/"))
+	//s.Use(fiber.WithStatic("./example/fiber/dist/"))
 
 	s.Run()
 
