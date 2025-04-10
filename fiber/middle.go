@@ -28,25 +28,28 @@ func dealErr(c fiber.Ctx, err error) error {
 	if errors.As(err, &e) {
 		return c.Status(e.Code).SendString(e.Message)
 	}
-	return nil
+	return err
 }
 
 func dealRecover(c fiber.Ctx, e any) {
 	switch w := e.(type) {
 	case nil:
 	case in.Writer:
+		c.Response().ResetBody()
 		for i, v := range w.Header() {
 			c.Set(i, strings.Join(v, ","))
 		}
 		if w.StatusCode() >= 0 {
 			c.Status(w.StatusCode())
 		}
-		c.Response().ResetBody()
 		io.Copy(c, w)
+
 	default:
+		c.Response().ResetBody()
 		c.Status(http.StatusInternalServerError)
 		s := conv.String(e)
 		c.Write(*(*[]byte)(unsafe.Pointer(&s)))
+
 	}
 }
 
