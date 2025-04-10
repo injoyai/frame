@@ -178,9 +178,6 @@ func BindCode(code int, handler func(c Ctx)) Handler {
 			}
 		}()
 		err := c.Next()
-		var e *fiber.Error
-		if errors.As(err, &e) {
-			c.Status(e.Code).SendString(e.Message)
-		}
+		err = dealErr(c, err)
 	}
 }
