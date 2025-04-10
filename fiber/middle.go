@@ -23,6 +23,14 @@ import (
 	"unsafe"
 )
 
+func dealErr(c fiber.Ctx, err error) error {
+	var e *fiber.Error
+	if errors.As(err, &e) {
+		return c.Status(e.Code).SendString(e.Message)
+	}
+	return nil
+}
+
 func dealRecover(c fiber.Ctx, e any) {
 	switch w := e.(type) {
 	case nil:

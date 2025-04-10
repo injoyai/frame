@@ -1,7 +1,6 @@
 package fiber
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
@@ -56,13 +55,7 @@ func New(use ...Middle) *Server {
 		Respondent: in.DefaultClient,
 	}
 	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c fiber.Ctx, err error) error {
-			var e *fiber.Error
-			if errors.As(err, &e) {
-				c.Status(e.Code).SendString(e.Message)
-			}
-			return nil
-		},
+		ErrorHandler:              dealErr,
 		DisableDefaultContentType: true,
 	})
 	_group.Router = app.Group("")
