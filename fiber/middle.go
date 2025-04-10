@@ -58,10 +58,12 @@ func WithRecover() HandlerBase {
 	})
 }
 
+// WithPprof 开启pprof
 func WithPprof() HandlerBase {
 	return pprof.New(pprof.Config{})
 }
 
+// WithCORS 设置响应CORS头部
 func WithCORS() HandlerBase {
 	return func(c fiber.Ctx) error {
 		c.Set("Access-Control-Allow-Origin", "*")
@@ -73,6 +75,7 @@ func WithCORS() HandlerBase {
 	}
 }
 
+// WithSwagger 加载swagger
 func WithSwagger(swag *middle.Swagger) Handler {
 	return func(c Ctx) error {
 		_, err := swag.Do(
@@ -87,6 +90,7 @@ func WithSwagger(swag *middle.Swagger) Handler {
 	}
 }
 
+// WithPing 状态检查
 func WithPing() Handler {
 	return func(c Ctx) error {
 		switch c.Path() {
@@ -97,6 +101,7 @@ func WithPing() Handler {
 	}
 }
 
+// WithLog 打印请求日志,配合WithRecover使用
 func WithLog() HandlerBase {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
@@ -107,10 +112,12 @@ func WithLog() HandlerBase {
 	}
 }
 
+// WithEmbed 加载嵌入文件
 func WithEmbed(apiPrefix, filePrefix string, e embed.FS) Handler {
 	return WithFS(apiPrefix, filePrefix, e)
 }
 
+// WithFS 加载文件
 func WithFS(apiPrefix, filePrefix string, fs fs.FS) HandlerBase {
 	return func(c fiber.Ctx) error {
 		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
@@ -137,7 +144,13 @@ func WithFS(apiPrefix, filePrefix string, fs fs.FS) HandlerBase {
 	}
 }
 
-func WithCache() HandlerBase {
+// WithStatic 加载静态文件,本地目录
+func WithStatic(root string) HandlerBase {
+	return static.New(root)
+}
+
+// WithCache 缓存无参的GET请求
+func WithCache(expiration ...time.Duration) HandlerBase {
 	type Message struct {
 		Header []byte `json:"header"`
 		Body   []byte `json:"body"`
@@ -153,7 +166,7 @@ func WithCache() HandlerBase {
 					Header: c.Response().Header.Header(),
 					Body:   c.Response().Body(),
 				}, nil
-			})
+			}, expiration...)
 			in.CheckErr(err)
 			header := http.Header{}
 			json.Unmarshal(data.(*Message).Header, &header)
@@ -161,10 +174,6 @@ func WithCache() HandlerBase {
 		}
 		return c.Next()
 	}
-}
-
-func WithStatic(root string) HandlerBase {
-	return static.New(root)
 }
 
 // BindCode 绑定响应状态码
