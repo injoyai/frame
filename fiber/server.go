@@ -55,7 +55,10 @@ func New(use ...Middle) *Server {
 		Respondent: in.DefaultClient,
 	}
 	app := fiber.New(fiber.Config{
-		ErrorHandler:              dealErr,
+		ErrorHandler: func(c fiber.Ctx, err error) error {
+			dealErr(c, err)
+			return nil
+		},
 		DisableDefaultContentType: true,
 	})
 	_group.Router = app.Group("")

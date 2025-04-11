@@ -3,16 +3,15 @@ package fiber
 import (
 	"embed"
 	"encoding/json"
-	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
-	rec "github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/logs"
 	"io"
 	"io/fs"
 	"net/http"
@@ -23,26 +22,22 @@ import (
 	"unsafe"
 )
 
-func dealErr(c fiber.Ctx, err error) error {
-	var e *fiber.Error
-	if errors.As(err, &e) {
-		return c.Status(e.Code).SendString(e.Message)
-	}
-	return err
-}
-
-func dealRecover(c fiber.Ctx, e any) {
-	switch w := e.(type) {
+func dealErr(c fiber.Ctx, e any) {
+	switch err := e.(type) {
 	case nil:
+
 	case in.Writer:
 		c.Response().ResetBody()
-		for i, v := range w.Header() {
+		for i, v := range err.Header() {
 			c.Set(i, strings.Join(v, ","))
 		}
-		if w.StatusCode() >= 0 {
-			c.Status(w.StatusCode())
+		if err.StatusCode() >= 0 {
+			c.Status(err.StatusCode())
 		}
-		io.Copy(c, w)
+		io.Copy(c, err)
+
+	case *fiber.Error:
+		c.Status(err.Code).SendString(err.Message)
 
 	default:
 		c.Response().ResetBody()
@@ -55,10 +50,14 @@ func dealRecover(c fiber.Ctx, e any) {
 
 // WithRecover 配合in包使用，可以提前捕获，方便计时能中间件德操作
 func WithRecover() HandlerBase {
-	return rec.New(rec.Config{
-		EnableStackTrace:  true,
-		StackTraceHandler: dealRecover,
-	})
+	return func(c fiber.Ctx) error {
+		defer func() {
+			if e := recover(); e != nil {
+				dealErr(c, e)
+			}
+		}()
+		return c.Next()
+	}
 }
 
 // WithPprof 开启pprof
@@ -160,6 +159,7 @@ func WithCache(expiration ...time.Duration) HandlerBase {
 	}
 	cache := maps.NewSafe()
 	return func(c fiber.Ctx) error {
+		logs.Trace("WithCache")
 		if c.Method() == fiber.MethodGet && len(c.Queries()) == 0 {
 			data, err := cache.GetOrSetByHandler(c.Path(), func() (any, error) {
 				if err := c.Next(); err != nil {
@@ -190,6 +190,6 @@ func BindCode(code int, handler func(c Ctx)) Handler {
 			}
 		}()
 		err := c.Next()
-		err = dealErr(c, err)
+		dealErr(c, err)
 	}
 }
