@@ -30,7 +30,6 @@ func main() {
 		fiber.BindCode(404, func(c fiber.Ctx) {
 			c.Text(404, "bind 404")
 		}),
-		//fiber.WithRecover(),
 	)
 
 	s.Use(func(c in.Client) {

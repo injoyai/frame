@@ -182,13 +182,30 @@ func WithCache(expiration ...time.Duration) Middle {
 // BindCode 绑定响应状态码
 // 需要在WithRecover之前,才能改变状态码
 // 这个Bing可以让log打印准确状态,系统自带的是最后执行的,log打印不准
-func BindCode(code int, handler func(c Ctx)) Middle {
+func BindCode(code int, handler Handler) Middle {
 	return func(c Ctx) {
 		defer func() {
 			if e := recover(); e != nil {
 				dealErr(c, e)
 			}
 			if code == c.Response().StatusCode() {
+				handler(c)
+			}
+		}()
+		err := c.Next()
+		dealErr(c, err)
+	}
+}
+
+// BindCodes 绑定响应状态码
+func BindCodes(m map[int]Handler) Middle {
+	return func(c Ctx) {
+		defer func() {
+			if e := recover(); e != nil {
+				dealErr(c, e)
+			}
+			handler, ok := m[c.Response().StatusCode()]
+			if ok {
 				handler(c)
 			}
 		}()
