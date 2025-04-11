@@ -49,7 +49,7 @@ func dealErr(c fiber.Ctx, e any) {
 }
 
 // WithRecover 配合in包使用，可以提前捕获，方便计时能中间件德操作
-func WithRecover() HandlerBase {
+func WithRecover() Middle {
 	return func(c fiber.Ctx) error {
 		defer func() {
 			if e := recover(); e != nil {
@@ -61,12 +61,12 @@ func WithRecover() HandlerBase {
 }
 
 // WithPprof 开启pprof
-func WithPprof() HandlerBase {
+func WithPprof() Middle {
 	return pprof.New(pprof.Config{})
 }
 
 // WithCORS 设置响应CORS头部
-func WithCORS() HandlerBase {
+func WithCORS() Middle {
 	return func(c fiber.Ctx) error {
 		c.Set("Access-Control-Allow-Origin", "*")
 		c.Set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")
@@ -78,7 +78,7 @@ func WithCORS() HandlerBase {
 }
 
 // WithSwagger 加载swagger
-func WithSwagger(swag *middle.Swagger) Handler {
+func WithSwagger(swag *middle.Swagger) Middle {
 	return func(c Ctx) error {
 		_, err := swag.Do(
 			string(c.Request().URI().Path()),
@@ -93,7 +93,7 @@ func WithSwagger(swag *middle.Swagger) Handler {
 }
 
 // WithPing 状态检查
-func WithPing() Handler {
+func WithPing() Middle {
 	return func(c Ctx) error {
 		switch c.Path() {
 		case "/ping":
@@ -104,7 +104,7 @@ func WithPing() Handler {
 }
 
 // WithLog 打印请求日志,配合WithRecover使用
-func WithLog() HandlerBase {
+func WithLog() Middle {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
@@ -115,12 +115,12 @@ func WithLog() HandlerBase {
 }
 
 // WithEmbed 加载嵌入文件
-func WithEmbed(apiPrefix, filePrefix string, e embed.FS) Handler {
+func WithEmbed(apiPrefix, filePrefix string, e embed.FS) Middle {
 	return WithFS(apiPrefix, filePrefix, e)
 }
 
 // WithFS 加载文件
-func WithFS(apiPrefix, filePrefix string, fs fs.FS) HandlerBase {
+func WithFS(apiPrefix, filePrefix string, fs fs.FS) Middle {
 	return func(c fiber.Ctx) error {
 		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
 		if !ok {
@@ -147,12 +147,12 @@ func WithFS(apiPrefix, filePrefix string, fs fs.FS) HandlerBase {
 }
 
 // WithStatic 加载静态文件,本地目录
-func WithStatic(root string) HandlerBase {
+func WithStatic(root string) Middle {
 	return static.New(root)
 }
 
 // WithCache 缓存无参的GET请求
-func WithCache(expiration ...time.Duration) HandlerBase {
+func WithCache(expiration ...time.Duration) Middle {
 	type Message struct {
 		Header []byte `json:"header"`
 		Body   []byte `json:"body"`
@@ -182,9 +182,12 @@ func WithCache(expiration ...time.Duration) HandlerBase {
 // BindCode 绑定响应状态码
 // 需要在WithRecover之前,才能改变状态码
 // 这个Bing可以让log打印准确状态,系统自带的是最后执行的,log打印不准
-func BindCode(code int, handler func(c Ctx)) Handler {
+func BindCode(code int, handler func(c Ctx)) Middle {
 	return func(c Ctx) {
 		defer func() {
+			if e := recover(); e != nil {
+				dealErr(c, e)
+			}
 			if code == c.Response().StatusCode() {
 				handler(c)
 			}

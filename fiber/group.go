@@ -44,7 +44,7 @@ func (this *group) Use(use ...Middle) {
 	}
 }
 
-func (this *group) transfer(handler Handler) HandlerBase {
+func (this *group) transfer(handler Middle) HandlerBase {
 	return func(ctx fiber.Ctx) (err error) {
 		switch f := handler.(type) {
 		case fiber.Handler:

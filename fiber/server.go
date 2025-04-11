@@ -12,16 +12,7 @@ type (
 	HandlerBase = fiber.Handler
 	Error       = fiber.Error
 
-	/*
-		Handler 支持以下类型
-		func(c Ctx)
-		func(c Ctx) error
-		func(c fiber.Ctx)
-		func(c fiber.Ctx) error
-		func(r Requester)
-		func(r Respondent)
-	*/
-	Handler = any
+	Handler = func(c Ctx)
 
 	/*
 		Middle 支持以下类型

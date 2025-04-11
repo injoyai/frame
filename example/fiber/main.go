@@ -7,7 +7,6 @@ import (
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/logs"
 	"time"
 )
 
@@ -31,7 +30,7 @@ func main() {
 		fiber.BindCode(404, func(c fiber.Ctx) {
 			c.Text(404, "bind 404")
 		}),
-		fiber.WithRecover(),
+		//fiber.WithRecover(),
 	)
 
 	s.Use(func(c in.Client) {
@@ -54,12 +53,6 @@ func main() {
 		})
 		g.ALL("/500", func(c fiber.Ctx) {
 			in.Text(500, "500")
-		})
-		g.ALL("/respondent", func(r fiber.Respondent) {
-			r.Succ("respondent")
-		})
-		g.ALL("/requester", func(r fiber.Requester) {
-			logs.Debug(r.GetString("key"))
 		})
 
 		g.ALL("/ws", func(c fiber.Ctx) {
