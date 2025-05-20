@@ -177,6 +177,6 @@ func (this *client) Err(data any) {
 // CheckErr 检测错误(遇到错误结束)
 func (this *client) CheckErr(err error, failMsg ...string) {
 	if err != nil {
-		this.Err(conv.DefaultString(err.Error(), failMsg...))
+		this.Err(conv.Default[string](err.Error(), failMsg...))
 	}
 }
