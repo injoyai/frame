@@ -10,7 +10,7 @@ const (
 )
 
 var (
-	Log Logger = logs.NewEntity("信息").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter)
+	Log Logger = logs.NewEntity("").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter)
 )
 
 type Logger interface {
