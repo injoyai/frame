@@ -47,7 +47,7 @@ type Ctx interface {
 	Parse(ptr any)
 
 	// Websocket websocket
-	Websocket(handler func(conn *Websocket))
+	Websocket(handler func(ws *Websocket))
 
 	// SSE server sent event
 	SSE(handler func(w SSE))
@@ -186,8 +186,8 @@ type Requester interface {
 	IsArray(key string) bool
 	IsPointer(key string) bool
 	IsNil(key string) bool
-	GetInterface(key string, def ...interface{}) interface{}
-	GetInterfaces(key string, def ...[]interface{}) []interface{}
+	GetInterface(key string, def ...any) any
+	GetInterfaces(key string, def ...[]any) []any
 	GetByte(key string, def ...byte) byte
 	GetBytes(key string, def ...[]byte) []byte
 	GetRune(key string, def ...rune) rune
@@ -216,8 +216,8 @@ type Requester interface {
 	GetMinute(key string, def ...time.Duration) time.Duration
 	GetHour(key string, def ...time.Duration) time.Duration
 	GetErr(key string, def ...error) error
-	GetGMap(key string, def ...map[string]interface{}) map[string]interface{}
+	GetGMap(key string, def ...map[string]any) map[string]any
 	GetSMap(key string, def ...map[string]string) map[string]string
-	GetIMap(key string, def ...map[interface{}]interface{}) map[interface{}]interface{}
-	GetDMap(key string, def ...interface{}) *conv.Map
+	GetIMap(key string, def ...map[any]any) map[any]any
+	GetDMap(key string, def ...any) *conv.Map
 }
