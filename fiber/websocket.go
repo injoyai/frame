@@ -31,14 +31,14 @@ type Websocket struct {
 	ctx context.Context
 }
 
-// Wait 等待客户端关闭
-func (this *Websocket) Wait() {
+// Done 等待客户端关闭
+func (this *Websocket) Done() <-chan struct{} {
 	c := make(chan struct{})
 	this.SetCloseHandler(func(code int, text string) error {
 		close(c)
 		return nil
 	})
-	<-c
+	return c
 }
 
 // ReadMessage 实现ios.MReader接口
