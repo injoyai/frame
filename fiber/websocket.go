@@ -31,6 +31,16 @@ type Websocket struct {
 	ctx context.Context
 }
 
+// Wait 等待客户端关闭
+func (this *Websocket) Wait() {
+	c := make(chan struct{})
+	this.SetCloseHandler(func(code int, text string) error {
+		close(c)
+		return nil
+	})
+	<-c
+}
+
 // ReadMessage 实现ios.MReader接口
 func (this *Websocket) ReadMessage() ([]byte, error) {
 	_, p, err := this.Conn.ReadMessage()
@@ -40,7 +50,7 @@ func (this *Websocket) ReadMessage() ([]byte, error) {
 // DiscardRead 丢弃读取数据,但是还是需要读取,才能监听到客户端关闭信号
 // 例如浏览器,需要监听才能响应给客户端,浏览器才能正常关闭ws链接
 func (this *Websocket) DiscardRead() {
-	go func() {
+	func() {
 		for {
 			select {
 			case <-this.ctx.Done():
