@@ -12,7 +12,6 @@ import (
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/logs"
 	"io"
 	"io/fs"
 	"net/http"
@@ -185,7 +184,6 @@ func WithCache(expiration ...time.Duration) Middle {
 	}
 	cache := maps.NewSafe()
 	return func(c fiber.Ctx) error {
-		logs.Trace("WithCache")
 		if c.Method() == fiber.MethodGet && len(c.Queries()) == 0 {
 			data, err := cache.GetOrSetByHandler(c.Path(), func() (any, error) {
 				if err := c.Next(); err != nil {
