@@ -183,7 +183,7 @@ func WithCache(expiration ...time.Duration) Middle {
 		Body   []byte `json:"body"`
 	}
 	cache := maps.NewSafe()
-	return func(c fiber.Ctx) error {
+	return func(c Ctx) {
 		if c.Method() == fiber.MethodGet && len(c.Queries()) == 0 {
 			data, err := cache.GetOrSetByHandler(c.Path(), func() (any, error) {
 				if err := c.Next(); err != nil {
@@ -194,12 +194,14 @@ func WithCache(expiration ...time.Duration) Middle {
 					Body:   c.Response().Body(),
 				}, nil
 			}, expiration...)
-			in.CheckErr(err)
+			c.CheckErr(err)
 			header := http.Header{}
-			json.Unmarshal(data.(*Message).Header, &header)
-			in.Custom200(data.(*Message).Body, header)
+			err = json.Unmarshal(data.(*Message).Header, &header)
+			c.CheckErr(err)
+			c.Custom200(data.(*Message).Body, header)
 		}
-		return c.Next()
+		err := c.Next()
+		dealErr(c, err)
 	}
 }
 
