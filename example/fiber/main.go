@@ -53,6 +53,12 @@ func main() {
 		g.ALL("/500", func(c fiber.Ctx) {
 			in.Text(500, "500")
 		})
+		g.ALL("proxy", func(c fiber.Ctx) {
+			c.Proxy("http://127.0.0.1:8080/api/json")
+		})
+		g.ALL("redirect", func(c fiber.Ctx) {
+			c.RedirectTo("/api/succ")
+		})
 
 		g.ALL("/ws", func(c fiber.Ctx) {
 			c.Websocket(func(ws *fiber.Websocket) {
