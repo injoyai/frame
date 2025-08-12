@@ -4,14 +4,15 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
-	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/logs"
 	"io"
 	"io/fs"
 	"net/http"
@@ -105,10 +106,11 @@ func WithPing() Middle {
 
 // WithLog 打印请求日志,配合WithRecover使用
 func WithLog() Middle {
+	log := logs.NewEntity("").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter)
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			frame.Log.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
+			log.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}
@@ -159,33 +161,6 @@ func WithFS(prefix string, fs fs.FS) Handler {
 		c.Custom200(f, nil)
 	}
 }
-
-//// WithFS 加载文件
-//func WithFS(apiPrefix, filePrefix string, fs fs.FS) Middle {
-//	return func(c fiber.Ctx) error {
-//		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
-//		if !ok {
-//			return c.Next()
-//		}
-//		if filename == "/" || filename == "" {
-//			filename = "/index.html"
-//		}
-//		f, err := fs.Open(path.Join(filePrefix, filename))
-//		if os.IsNotExist(err) {
-//			return c.Next()
-//		}
-//		if err != nil {
-//			return err
-//		}
-//		defer f.Close()
-//		bs, err := io.ReadAll(f)
-//		if err != nil {
-//			return err
-//		}
-//		_, err = c.Status(fiber.StatusOK).Write(bs)
-//		return err
-//	}
-//}
 
 // WithStatic 加载静态文件,本地目录
 func WithStatic(root string) Handler {
@@ -258,5 +233,42 @@ func BindCodes(m map[int]Handler) Middle {
 		}()
 		err := c.Next()
 		dealErr(c, err)
+	}
+}
+
+/*
+
+func(s *Server)
+
+*/
+
+func WithPort(port int) Middle {
+	return func(s *Server) {
+		s.SetPort(port)
+	}
+}
+
+func WithListenConfig(cfg *ListenConfig) Middle {
+	return func(s *Server) {
+		s.ListenConfig = cfg
+	}
+}
+
+func WithPrintRoutes(b ...bool) Middle {
+	return func(s *Server) {
+		if s.ListenConfig == nil {
+			s.ListenConfig = &ListenConfig{}
+		}
+		s.ListenConfig.EnablePrintRoutes = len(b) == 0 || b[0]
+	}
+}
+
+func WithShutdown(f func(err error)) Middle {
+	return func(s *Server) {
+		if s.ListenConfig == nil {
+			s.ListenConfig = &ListenConfig{}
+		}
+		s.ListenConfig.OnShutdownSuccess = func() { f(nil) }
+		s.ListenConfig.OnShutdownError = f
 	}
 }

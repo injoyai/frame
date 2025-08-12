@@ -22,9 +22,11 @@ func main() {
 		JsonFilename: "./example/fiber/docs/swagger.json",
 		UI:           middle.DefaultSwaggerUI,
 	}))
-	s.SetPort(frame.DefaultPort)
+	//s.SetPort(frame.DefaultPort)
 
 	s.Use(
+		fiber.WithPort(frame.DefaultPort),
+		fiber.WithPrintRoutes(false),
 		fiber.BindCode(500, func(c fiber.Ctx) {
 			logs.Err(string(c.Response().Body()))
 			c.Succ("系统开小差啦,请稍后再试")

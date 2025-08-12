@@ -76,6 +76,8 @@ func (this *group) transfer(handler Middle) HandlerBase {
 					return
 				}
 			}
+		case func(s *Server):
+			//pass
 		default:
 			panic(fmt.Sprintf("unknown handler/middle %T", handler))
 		}
