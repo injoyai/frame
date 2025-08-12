@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/valyala/fasthttp"
 	"sync"
 	"time"
 )
@@ -36,6 +37,12 @@ type Ctx interface {
 
 	// Respondent 响应接口
 	in.Respondent
+
+	// Proxy 代理请求
+	Proxy(url string)
+
+	// RedirectTo 重定向,名字避免冲突加了To
+	RedirectTo(url string)
 
 	// SetHeader 设置响应头
 	SetHeader(k, v string)
@@ -120,6 +127,31 @@ func (this *ctx) GetVar(key string) *conv.Var {
 	}
 
 	return _nil
+}
+
+func (this *ctx) Proxy(target string) {
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)
+	defer fasthttp.ReleaseResponse(resp)
+	// 复制原始请求
+	this.Ctx.Request().CopyTo(req)
+	// 修改目标 URL
+	req.SetRequestURI(target)
+	// 使用 HostClient 发送
+	hostClient := &fasthttp.HostClient{
+		Addr: string(req.URI().Host()),
+	}
+	err := hostClient.Do(req, resp)
+	this.CheckErr(err)
+
+	// 把响应写回给客户端
+	resp.CopyTo(this.Ctx.Response())
+}
+
+func (this *ctx) RedirectTo(url string) {
+	err := this.Ctx.Redirect().To(url)
+	this.CheckErr(err)
 }
 
 func (this *ctx) SetHeader(k, v string) {
