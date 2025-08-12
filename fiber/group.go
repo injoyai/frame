@@ -1,9 +1,11 @@
 package fiber
 
 import (
+	"embed"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame/middle/in"
+	"io/fs"
 )
 
 type Grouper interface {
@@ -20,6 +22,9 @@ type Grouper interface {
 	CONNECT(path string, handler Handler)
 	TRACE(path string, handler Handler)
 	PATCH(path string, handler Handler)
+	Static(path string, dir string)
+	Embed(path, prefix string, e embed.FS)
+	FS(path, prefix string, fs fs.FS)
 }
 
 type group struct {
@@ -121,4 +126,16 @@ func (this *group) TRACE(path string, handler Handler) {
 
 func (this *group) PATCH(path string, handler Handler) {
 	this.Router.Patch(path, this.transfer(handler))
+}
+
+func (this *group) Static(path, dir string) {
+	this.ALL(path, WithStatic(dir))
+}
+
+func (this *group) Embed(path, prefix string, e embed.FS) {
+	this.ALL(path, WithEmbed(prefix, e))
+}
+
+func (this *group) FS(path, prefix string, fs fs.FS) {
+	this.ALL(path, WithFS(prefix, fs))
 }

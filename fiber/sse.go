@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"github.com/injoyai/conv"
 	"io"
-	"strings"
 	"unsafe"
 )
 
@@ -34,15 +33,14 @@ func (this *sse) Write(p []byte) (int, error) {
 }
 
 func (this *sse) WriteString(s string) (int, error) {
-
-	return this.Write([]byte(s))
-}
-
-func (this *sse) WriteStrings(s ...string) (int, error) {
-	return this.Write([]byte(strings.Join(s, "\n")))
+	return this.Write(*(*[]byte)(unsafe.Pointer(&s)))
 }
 
 func (this *sse) WriteAny(v any) error {
+	if bs, ok := v.([]byte); ok {
+		_, err := this.Writer.Write(bs)
+		return err
+	}
 	s := conv.String(v)
 	_, err := this.Writer.Write(*(*[]byte)(unsafe.Pointer(&s)))
 	return err

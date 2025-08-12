@@ -140,40 +140,59 @@ func WithLog2(color ...bool) Middle {
 }
 
 // WithEmbed 加载嵌入文件
-func WithEmbed(apiPrefix, filePrefix string, e embed.FS) Middle {
-	return WithFS(apiPrefix, filePrefix, e)
+func WithEmbed(prefix string, e embed.FS) Handler {
+	return WithFS(prefix, e)
 }
 
 // WithFS 加载文件
-func WithFS(apiPrefix, filePrefix string, fs fs.FS) Middle {
-	return func(c fiber.Ctx) error {
-		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
-		if !ok {
-			return c.Next()
-		}
-		if filename == "/" || filename == "" {
-			filename = "/index.html"
-		}
-		f, err := fs.Open(path.Join(filePrefix, filename))
+func WithFS(prefix string, fs fs.FS) Handler {
+	return func(c Ctx) {
+		filename, _ := strings.CutPrefix(c.Path(), c.Route().Path)
+		filename = conv.Select(filename == "/" || filename == "", "index.html", filename)
+		f, err := fs.Open(path.Join(prefix, filename))
 		if os.IsNotExist(err) {
-			return c.Next()
+			dealErr(c, c.Next())
+			return
 		}
-		if err != nil {
-			return err
-		}
+		c.CheckErr(err)
 		defer f.Close()
-		bs, err := io.ReadAll(f)
-		if err != nil {
-			return err
-		}
-		_, err = c.Status(fiber.StatusOK).Write(bs)
-		return err
+		c.Custom200(f, nil)
 	}
 }
 
+//// WithFS 加载文件
+//func WithFS(apiPrefix, filePrefix string, fs fs.FS) Middle {
+//	return func(c fiber.Ctx) error {
+//		filename, ok := strings.CutPrefix(c.Path(), apiPrefix)
+//		if !ok {
+//			return c.Next()
+//		}
+//		if filename == "/" || filename == "" {
+//			filename = "/index.html"
+//		}
+//		f, err := fs.Open(path.Join(filePrefix, filename))
+//		if os.IsNotExist(err) {
+//			return c.Next()
+//		}
+//		if err != nil {
+//			return err
+//		}
+//		defer f.Close()
+//		bs, err := io.ReadAll(f)
+//		if err != nil {
+//			return err
+//		}
+//		_, err = c.Status(fiber.StatusOK).Write(bs)
+//		return err
+//	}
+//}
+
 // WithStatic 加载静态文件,本地目录
-func WithStatic(root string) Middle {
-	return static.New(root)
+func WithStatic(root string) Handler {
+	h := static.New(root)
+	return func(c Ctx) {
+		c.CheckErr(h(c))
+	}
 }
 
 // WithCache 缓存无参的GET请求
