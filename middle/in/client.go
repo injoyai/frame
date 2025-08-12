@@ -3,9 +3,9 @@ package in
 import (
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
-	"io"
 	"net/http"
-	"strings"
+	"net/http/httputil"
+	"net/url"
 	"unsafe"
 )
 
@@ -63,24 +63,13 @@ func (this *client) SetWriterOption(f ...WriterOption) {
 //=================================Proxy=================================//
 
 func (this *client) Proxy(w http.ResponseWriter, r *http.Request, uri string) {
-	defer r.Body.Close()
-	req, err := http.NewRequest(r.Method, uri, r.Body)
+	u, err := url.Parse(uri)
 	if err != nil {
 		this.fail(err)
 		return
 	}
-	req.Header = r.Header
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		this.fail(err)
-		return
-	}
-	defer resp.Body.Close()
-	for k, v := range resp.Header {
-		w.Header().Set(k, strings.Join(v, ","))
-	}
-	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	p := httputil.NewSingleHostReverseProxy(u)
+	p.ServeHTTP(w, r)
 }
 
 //=================================Middle=================================//
