@@ -44,7 +44,7 @@ func NewWriter(code int, i IMarshal, op ...WriterOption) Writer {
 		},
 		Writer: buf,
 	}
-	if i != nil {
+	if i != nil && i.Header() != nil {
 		w.header = i.Header()
 	}
 	for _, v := range op {
@@ -111,8 +111,10 @@ func (this *writer) WriteTo(w http.ResponseWriter) {
 		*ww = *this
 		return
 	}
-	for i, v := range this.header {
-		w.Header().Set(i, strings.Join(v, ","))
+	if this.header != nil {
+		for i, v := range this.header {
+			w.Header().Set(i, strings.Join(v, ","))
+		}
 	}
 	if this.code > 0 {
 		w.WriteHeader(this.code)
