@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 	"unsafe"
@@ -290,5 +291,27 @@ func WithResponseCode(succ, fail, unauthorized, forbidden string) Middle {
 			unauthorized,
 			forbidden,
 		)
+	}
+}
+
+// WithStruct 注册对象的方法到路由
+func WithStruct(a any) func(g Grouper) {
+	t := reflect.TypeOf(a)
+	if t.Kind() != reflect.Struct && t.Elem().Kind() != reflect.Struct {
+		panic("type must be struct !!!")
+	}
+	ctxType := reflect.TypeOf((*Ctx)(nil)).Elem()
+	return func(g Grouper) {
+		for i := 0; i < t.NumMethod(); i++ {
+			m := t.Method(i)
+			if m.Type.NumIn() == 2 && m.Type.In(1) == ctxType {
+				g.ALL(m.Name, func(c Ctx) {
+					m.Func.Call([]reflect.Value{
+						reflect.ValueOf(a),
+						reflect.ValueOf(c),
+					})
+				})
+			}
+		}
 	}
 }

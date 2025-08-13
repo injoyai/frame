@@ -52,6 +52,7 @@ func main() {
 
 	s.Embed("/dist", "dist", dist)
 	s.Group("/api", func(g fiber.Grouper) {
+		g.Group("/user", fiber.WithStruct(&User{1.88}))
 		g.ALL("/succ", func(c fiber.Ctx) {
 			c.Write([]byte("ctx message"))
 			c.Succ(667)
@@ -100,6 +101,10 @@ func main() {
 				}
 			})
 		})
+		g.ALL("/body", func(c fiber.Ctx) {
+			_ = c.Body()
+			in.Text200(string(c.Body()))
+		})
 		g.Static("", "./example/fiber/dist")
 		g.Embed("/dist", "dist", dist)
 		g.ALL("/dist", fiber.WithStatic("./example/fiber/dist/"))
@@ -110,4 +115,28 @@ func main() {
 
 	s.Run()
 
+}
+
+type User struct {
+	high float64
+}
+
+// Name 指针下方法可以注册,只能指针对象注册
+func (u *User) Name(c fiber.Ctx) {
+	in.Succ("injoy")
+}
+
+// Age 指针对象可以注册非指针下方法
+func (u User) Age(c fiber.Ctx) {
+	in.Succ(18)
+}
+
+// High 测试引用对象字段,对象不能为nil
+func (u User) High(c fiber.Ctx) {
+	in.Succ(u.high)
+}
+
+// test 小写不会注册
+func (u User) test(c fiber.Ctx) {
+	in.Succ("test")
 }
