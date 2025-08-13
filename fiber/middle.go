@@ -197,6 +197,13 @@ func WithCache(expiration ...time.Duration) Middle {
 	}
 }
 
+// BindHtml 绑定响应状态码,响应html
+func BindHtml(code int, html string) Middle {
+	return BindCode(code, func(c Ctx) {
+		c.Html(code, html)
+	})
+}
+
 // BindCode 绑定响应状态码
 // 需要在WithRecover之前,才能改变状态码
 // 这个Bing可以让log打印准确状态,系统自带的是最后执行的,log打印不准

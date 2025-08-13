@@ -8,6 +8,7 @@ import (
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -34,12 +35,13 @@ func main() {
 		//	logs.Err(err)
 		//}),
 
+		fiber.BindHtml(401, frame.Html401),
+		fiber.BindHtml(403, frame.Html403),
+		fiber.BindHtml(404, frame.Html404),
 		fiber.BindCode(500, func(c fiber.Ctx) {
 			log.Println("错误:", string(c.Response().Body()))
+			c.Html(http.StatusInternalServerError, frame.Html500)
 			c.Succ("系统开小差啦,请稍后再试")
-		}),
-		fiber.BindCode(404, func(c fiber.Ctx) {
-			c.Text(404, "bind 404")
 		}),
 
 		fiber.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
@@ -60,6 +62,15 @@ func main() {
 		})
 		g.ALL("/500", func(c fiber.Ctx) {
 			in.Text(500, "500")
+		})
+		g.ALL("/401", func(c fiber.Ctx) {
+			in.Text(401, "401")
+		})
+		g.ALL("/403", func(c fiber.Ctx) {
+			in.Text(403, "403")
+		})
+		g.ALL("/404", func(c fiber.Ctx) {
+			in.Text(404, "404")
 		})
 		g.ALL("/panic", func(c fiber.Ctx) {
 			panic("panic")
