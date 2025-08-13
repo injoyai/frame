@@ -4,11 +4,9 @@ go 1.20
 
 require (
 	github.com/fasthttp/websocket v1.5.3
-	github.com/fatih/color v1.18.0
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
 	github.com/injoyai/base v1.2.7
 	github.com/injoyai/conv v1.2.3
-	github.com/injoyai/logs v1.0.9
 	github.com/valyala/fasthttp v1.58.0
 )
 
