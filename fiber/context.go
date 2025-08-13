@@ -64,6 +64,9 @@ type Ctx interface {
 
 	// free 释放内存
 	free()
+
+	// next 执行下一个中间件,内部处理错误
+	next()
 }
 
 func NewCtx(c fiber.Ctx, r Respondent) Ctx {
@@ -199,6 +202,11 @@ func (this *ctx) free() {
 	this.requestHeader = nil
 	this.bodyMap = nil
 	ctxPoll.Put(this)
+}
+
+// next 执行下一个中间件,处理错误版
+func (this *ctx) next() {
+	dealErr(this.Ctx, this.Ctx.Next())
 }
 
 /*
