@@ -2,11 +2,9 @@ package fiber
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/logs"
 	"net"
 )
 
@@ -61,7 +59,7 @@ func New(use ...Middle) *Server {
 		Grouper: _group,
 		port:    frame.DefaultPort,
 		App:     app,
-		Log:     logs.NewEntity("").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter),
+		Log:     frame.NewLogger(),
 		ListenConfig: ListenConfig{
 			DisableStartupMessage: true,
 		},

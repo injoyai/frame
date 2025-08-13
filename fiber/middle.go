@@ -5,15 +5,14 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
+	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/logs"
 	"io"
 	"io/fs"
 	"net/http"
@@ -106,7 +105,7 @@ func WithPing() Middle {
 
 // WithLog 打印请求日志,配合WithRecover使用
 func WithLog() Middle {
-	log := logs.NewEntity("").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter)
+	log := frame.NewLogger()
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
@@ -153,7 +152,7 @@ func WithFS(prefix string, fs fs.FS) Handler {
 		filename = conv.Select(filename == "/" || filename == "", "index.html", filename)
 		f, err := fs.Open(path.Join(prefix, filename))
 		if os.IsNotExist(err) {
-			dealErr(c, c.Next())
+			c.next()
 			return
 		}
 		c.CheckErr(err)
@@ -166,7 +165,7 @@ func WithFS(prefix string, fs fs.FS) Handler {
 func WithStatic(root string) Handler {
 	h := static.New(root)
 	return func(c Ctx) {
-		c.CheckErr(h(c))
+		dealErr(c, h(c))
 	}
 }
 
@@ -194,8 +193,7 @@ func WithCache(expiration ...time.Duration) Middle {
 			c.CheckErr(err)
 			c.Custom200(data.(*Message).Body, header)
 		}
-		err := c.Next()
-		dealErr(c, err)
+		c.next()
 	}
 }
 
@@ -214,8 +212,7 @@ func BindCode(code int, handler Handler) Middle {
 				}
 			}()
 		}
-		err := c.Next()
-		dealErr(c, err)
+		c.next()
 	}
 }
 
@@ -231,8 +228,7 @@ func BindCodes(m map[int]Handler) Middle {
 				handler(c)
 			}
 		}()
-		err := c.Next()
-		dealErr(c, err)
+		c.next()
 	}
 }
 
