@@ -7,7 +7,7 @@ import (
 	"github.com/injoyai/frame/fiber"
 	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/logs"
+	"log"
 	"time"
 )
 
@@ -16,35 +16,39 @@ var dist embed.FS
 
 func main() {
 
-	s := fiber.Default(fiber.WithSwagger(&middle.Swagger{
-		IndexPath:    "/swagger",
-		JsonPath:     "/swagger/swagger.json",
-		JsonFilename: "./example/fiber/docs/swagger.json",
-		UI:           middle.DefaultSwaggerUI,
-	}))
-	//s.SetPort(frame.DefaultPort)
-
-	s.Use(
+	s := fiber.Default(
 		fiber.WithPort(frame.DefaultPort),
 		fiber.WithPrintRoutes(false),
+		fiber.WithSwagger(&middle.Swagger{
+			IndexPath:    "/swagger",
+			JsonPath:     "/swagger/swagger.json",
+			JsonFilename: "./example/fiber/docs/swagger.json",
+			UI:           middle.DefaultSwaggerUI,
+		}),
+
+		//fiber.WithContext(func() context.Context {
+		//	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		//	return ctx
+		//}()),
+		//fiber.WithShutdown(func(err error) {
+		//	logs.Err(err)
+		//}),
+
 		fiber.BindCode(500, func(c fiber.Ctx) {
-			logs.Err(string(c.Response().Body()))
+			log.Println("错误:", string(c.Response().Body()))
 			c.Succ("系统开小差啦,请稍后再试")
 		}),
 		fiber.BindCode(404, func(c fiber.Ctx) {
 			c.Text(404, "bind 404")
 		}),
+
+		fiber.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
+
+		fiber.WithEmbed("dist", dist),
+		fiber.WithStatic("./example/fiber/dist/"),
 	)
 
-	s.Use(func(c in.Client) {
-		c.SetHandlerWithCode(
-			"success",
-			"fail",
-			"unauthorized",
-			"forbidden",
-		)
-	})
-
+	s.Embed("/dist", "dist", dist)
 	s.Group("/api", func(g fiber.Grouper) {
 		g.ALL("/succ", func(c fiber.Ctx) {
 			c.Write([]byte("ctx message"))
@@ -56,6 +60,9 @@ func main() {
 		})
 		g.ALL("/500", func(c fiber.Ctx) {
 			in.Text(500, "500")
+		})
+		g.ALL("/panic", func(c fiber.Ctx) {
+			panic("panic")
 		})
 		g.ALL("/proxy", func(c fiber.Ctx) {
 			c.Proxy("http://127.0.0.1:8080/api/json")
@@ -89,10 +96,6 @@ func main() {
 			c.Succ(c.GetString("key"))
 		})
 	})
-
-	s.Embed("/dist", "dist", dist)
-	s.Use(fiber.WithEmbed("dist", dist))
-	s.Use(fiber.WithStatic("./example/fiber/dist/"))
 
 	s.Run()
 
