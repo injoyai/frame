@@ -82,6 +82,7 @@ func main() {
 		g.ALL("/redirect", func(c fiber.Ctx) {
 			c.RedirectTo("/api/succ")
 		})
+		g.Redirect("/redirect2", "/api/succ")
 		g.ALL("/ws", func(c fiber.Ctx) {
 			c.Websocket(func(ws *fiber.Websocket) {
 				for {

@@ -25,6 +25,7 @@ type Grouper interface {
 	Static(path string, dir string)
 	Embed(path, prefix string, e embed.FS)
 	FS(path, prefix string, fs fs.FS)
+	Redirect(path, to string)
 }
 
 type group struct {
@@ -140,4 +141,8 @@ func (this *group) Embed(path, prefix string, e embed.FS) {
 
 func (this *group) FS(path, prefix string, fs fs.FS) {
 	this.ALL(path, WithFS(prefix, fs))
+}
+
+func (this *group) Redirect(path, to string) {
+	this.ALL(path, func(c Ctx) { c.RedirectTo(to) })
 }
