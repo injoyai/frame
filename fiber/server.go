@@ -43,10 +43,6 @@ func Default(use ...Middle) *Server {
 }
 
 func New(use ...Middle) *Server {
-	_group := &group{
-		Router:     nil,
-		Respondent: in.DefaultClient,
-	}
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			dealErr(c, err)
@@ -54,12 +50,14 @@ func New(use ...Middle) *Server {
 		},
 		DisableDefaultContentType: true,
 	})
-	_group.Router = app.Group("")
 	ser := &Server{
-		Grouper: _group,
-		port:    frame.DefaultPort,
-		App:     app,
-		Log:     frame.NewLogger(),
+		Grouper: &group{
+			Router:     app.Group(""),
+			Respondent: in.DefaultClient,
+		},
+		port: frame.DefaultPort,
+		App:  app,
+		Log:  frame.NewLogger(),
 		ListenConfig: ListenConfig{
 			DisableStartupMessage: true,
 		},

@@ -1,6 +1,10 @@
 package frame
 
 const (
+	DefaultPort = 8080
+)
+
+const (
 	// Html401 StatusUnauthorized
 	Html401 = `<!DOCTYPE html>
 <html lang="zh-CN">
