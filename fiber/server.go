@@ -62,7 +62,7 @@ func New(use ...Middle) *Server {
 		port:    frame.DefaultPort,
 		App:     app,
 		Log:     logs.NewEntity("").SetSelfLevel(logs.LevelInfo).SetColor(color.FgCyan).SetFormatter(logs.TimeFormatter),
-		ListenConfig: &ListenConfig{
+		ListenConfig: ListenConfig{
 			DisableStartupMessage: true,
 		},
 	}
@@ -72,11 +72,11 @@ func New(use ...Middle) *Server {
 }
 
 type Server struct {
-	Grouper                    //路由
-	Log          frame.Logger  //日志
-	port         int           //端口
-	App          *fiber.App    //实例
-	ListenConfig *ListenConfig //监听配置
+	Grouper                   //路由
+	Log          frame.Logger //日志
+	port         int          //端口
+	App          *fiber.App   //实例
+	ListenConfig ListenConfig //监听配置
 }
 
 func (this *Server) Use(use ...Middle) {
@@ -103,28 +103,12 @@ func (this *Server) Run() error {
 	if this.Log != nil {
 		this.Log.Printf("[%s] 开启HTTP服务...\n", addr)
 	}
-	return this.App.Listen(addr, this.listenConfig()...)
+	return this.App.Listen(addr, this.ListenConfig)
 }
 
 func (this *Server) RunListener(l net.Listener) error {
 	if this.Log != nil {
 		this.Log.Printf("[%s] 开启服务成功...\n", l.Addr().String())
 	}
-	return this.App.Listener(l, this.listenConfig()...)
-}
-
-/*
-
-
-
-
-
-
- */
-
-func (this *Server) listenConfig() []ListenConfig {
-	if this.ListenConfig == nil {
-		return nil
-	}
-	return []ListenConfig{*this.ListenConfig}
+	return this.App.Listener(l, this.ListenConfig)
 }

@@ -1,6 +1,7 @@
 package fiber
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -87,7 +88,6 @@ func WithSwagger(swag *middle.Swagger) Middle {
 				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
 			},
 		)
-
 		c.CheckErr(err)
 		return c.Next()
 	}
@@ -242,33 +242,50 @@ func(s *Server)
 
 */
 
+// WithPort 设置监听端口
 func WithPort(port int) Middle {
 	return func(s *Server) {
 		s.SetPort(port)
 	}
 }
 
-func WithListenConfig(cfg *ListenConfig) Middle {
+// WithListenConfig 设置监听配置
+func WithListenConfig(cfg ListenConfig) Middle {
 	return func(s *Server) {
 		s.ListenConfig = cfg
 	}
 }
 
+// WithPrintRoutes 打印路由信息
 func WithPrintRoutes(b ...bool) Middle {
 	return func(s *Server) {
-		if s.ListenConfig == nil {
-			s.ListenConfig = &ListenConfig{}
-		}
 		s.ListenConfig.EnablePrintRoutes = len(b) == 0 || b[0]
 	}
 }
 
+// WithShutdown 设置服务关闭事件
 func WithShutdown(f func(err error)) Middle {
 	return func(s *Server) {
-		if s.ListenConfig == nil {
-			s.ListenConfig = &ListenConfig{}
-		}
 		s.ListenConfig.OnShutdownSuccess = func() { f(nil) }
 		s.ListenConfig.OnShutdownError = f
+	}
+}
+
+// WithContext 设置服务上下文
+func WithContext(ctx context.Context) Middle {
+	return func(s *Server) {
+		s.ListenConfig.GracefulContext = ctx
+	}
+}
+
+// WithResponseCode 设置响应码
+func WithResponseCode(succ, fail, unauthorized, forbidden string) Middle {
+	return func(c in.Client) {
+		c.SetHandlerWithCode(
+			succ,
+			fail,
+			unauthorized,
+			forbidden,
+		)
 	}
 }
