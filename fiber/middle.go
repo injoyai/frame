@@ -79,31 +79,6 @@ func WithCORS() Middle {
 	}
 }
 
-// WithSwagger 加载swagger
-func WithSwagger(swag *middle.Swagger) Middle {
-	return func(c Ctx) error {
-		_, err := swag.Do(
-			string(c.Request().URI().Path()),
-			func(r io.Reader, contentType string) {
-				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
-			},
-		)
-		c.CheckErr(err)
-		return c.Next()
-	}
-}
-
-// WithPing 状态检查
-func WithPing() Middle {
-	return func(c Ctx) error {
-		switch c.Path() {
-		case "/ping":
-			c.Succ("pong")
-		}
-		return c.Next()
-	}
-}
-
 // WithLog 打印请求日志,配合WithRecover使用
 func WithLog() Middle {
 	log := frame.NewLogger()
@@ -141,6 +116,49 @@ func WithLog2(color ...bool) Middle {
 	}
 }
 
+// WithResponseCode 设置响应码
+func WithResponseCode(succ, fail, unauthorized, forbidden string) Middle {
+	return func(c in.Client) {
+		c.SetHandlerWithCode(
+			succ,
+			fail,
+			unauthorized,
+			forbidden,
+		)
+	}
+}
+
+/*
+
+Handler func(c fiber.Ctx)
+
+*/
+
+// WithSwagger 加载swagger
+func WithSwagger(swag *middle.Swagger) Handler {
+	return func(c Ctx) {
+		_, err := swag.Do(
+			string(c.Request().URI().Path()),
+			func(r io.Reader, contentType string) {
+				c.Custom(http.StatusOK, r, http.Header{fiber.HeaderContentType: []string{contentType}})
+			},
+		)
+		c.CheckErr(err)
+		c.next()
+	}
+}
+
+// WithPing 状态检查
+func WithPing() Handler {
+	return func(c Ctx) {
+		switch c.Path() {
+		case "/ping":
+			c.Succ("pong")
+		}
+		c.next()
+	}
+}
+
 // WithEmbed 加载嵌入文件
 func WithEmbed(prefix string, e embed.FS) Handler {
 	return WithFS(prefix, e)
@@ -171,7 +189,7 @@ func WithStatic(root string) Handler {
 }
 
 // WithCache 缓存无参的GET请求
-func WithCache(expiration ...time.Duration) Middle {
+func WithCache(expiration ...time.Duration) Handler {
 	type Message struct {
 		Header []byte `json:"header"`
 		Body   []byte `json:"body"`
@@ -199,7 +217,7 @@ func WithCache(expiration ...time.Duration) Middle {
 }
 
 // BindHtml 绑定响应状态码,响应html
-func BindHtml(code int, html string) Middle {
+func BindHtml(code int, html string) Handler {
 	return BindCode(code, func(c Ctx) {
 		c.Html(code, html)
 	})
@@ -208,7 +226,7 @@ func BindHtml(code int, html string) Middle {
 // BindCode 绑定响应状态码
 // 需要在WithRecover之前,才能改变状态码
 // 这个Bing可以让log打印准确状态,系统自带的是最后执行的,log打印不准
-func BindCode(code int, handler Handler) Middle {
+func BindCode(code int, handler Handler) Handler {
 	return func(c Ctx) {
 		if handler != nil {
 			defer func() {
@@ -225,7 +243,7 @@ func BindCode(code int, handler Handler) Middle {
 }
 
 // BindCodes 绑定响应状态码
-func BindCodes(m map[int]Handler) Middle {
+func BindCodes(m map[int]Handler) Handler {
 	return func(c Ctx) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -242,33 +260,33 @@ func BindCodes(m map[int]Handler) Middle {
 
 /*
 
-func(s *Server)
+Option func(s *Server)
 
 */
 
 // WithPort 设置监听端口
-func WithPort(port int) Middle {
+func WithPort(port int) Option {
 	return func(s *Server) {
 		s.SetPort(port)
 	}
 }
 
 // WithListenConfig 设置监听配置
-func WithListenConfig(cfg ListenConfig) Middle {
+func WithListenConfig(cfg ListenConfig) Option {
 	return func(s *Server) {
 		s.ListenConfig = cfg
 	}
 }
 
 // WithPrintRoutes 打印路由信息
-func WithPrintRoutes(b ...bool) Middle {
+func WithPrintRoutes(b ...bool) Option {
 	return func(s *Server) {
 		s.ListenConfig.EnablePrintRoutes = len(b) == 0 || b[0]
 	}
 }
 
 // WithShutdown 设置服务关闭事件
-func WithShutdown(f func(err error)) Middle {
+func WithShutdown(f func(err error)) Option {
 	return func(s *Server) {
 		s.ListenConfig.OnShutdownSuccess = func() { f(nil) }
 		s.ListenConfig.OnShutdownError = f
@@ -276,21 +294,9 @@ func WithShutdown(f func(err error)) Middle {
 }
 
 // WithContext 设置服务上下文
-func WithContext(ctx context.Context) Middle {
+func WithContext(ctx context.Context) Option {
 	return func(s *Server) {
 		s.ListenConfig.GracefulContext = ctx
-	}
-}
-
-// WithResponseCode 设置响应码
-func WithResponseCode(succ, fail, unauthorized, forbidden string) Middle {
-	return func(c in.Client) {
-		c.SetHandlerWithCode(
-			succ,
-			fail,
-			unauthorized,
-			forbidden,
-		)
 	}
 }
 
@@ -298,7 +304,7 @@ func WithResponseCode(succ, fail, unauthorized, forbidden string) Middle {
 func WithStruct(a any) func(g Grouper) {
 	t := reflect.TypeOf(a)
 	if t.Kind() != reflect.Struct && t.Elem().Kind() != reflect.Struct {
-		panic("type must be struct !!!")
+		panic("type must be *struct/struct !!!")
 	}
 	ctxType := reflect.TypeOf((*Ctx)(nil)).Elem()
 	return func(g Grouper) {

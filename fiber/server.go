@@ -13,6 +13,8 @@ type (
 	Error        = fiber.Error
 	ListenConfig = fiber.ListenConfig
 
+	Option = func(s *Server)
+
 	Handler = func(c Ctx)
 
 	/*
