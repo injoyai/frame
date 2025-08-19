@@ -23,7 +23,7 @@ type Grouper interface {
 	TRACE(path string, handler Handler)
 	PATCH(path string, handler Handler)
 	Static(path string, dir string)
-	Embed(path, prefix string, e embed.FS)
+	Embed(path string, e embed.FS)
 	FS(path, prefix string, fs fs.FS)
 	Redirect(path, to string)
 }
@@ -135,12 +135,12 @@ func (this *group) Static(path, dir string) {
 	this.ALL(path, WithStatic(dir))
 }
 
-func (this *group) Embed(path, prefix string, e embed.FS) {
-	this.ALL(path, WithEmbed(prefix, e))
+func (this *group) Embed(path string, e embed.FS) {
+	this.ALL(path, WithEmbed(e))
 }
 
 func (this *group) FS(path, prefix string, fs fs.FS) {
-	this.ALL(path, WithFS(prefix, fs))
+	this.ALL(path, WithFS(fs))
 }
 
 func (this *group) Redirect(path, to string) {

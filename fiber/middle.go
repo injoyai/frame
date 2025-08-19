@@ -17,7 +17,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -160,16 +159,27 @@ func WithPing() Handler {
 }
 
 // WithEmbed 加载嵌入文件
-func WithEmbed(prefix string, e embed.FS) Handler {
-	return WithFS(prefix, e)
+func WithEmbed(e embed.FS) Handler {
+	return WithFS(e)
 }
 
 // WithFS 加载文件
-func WithFS(prefix string, fs fs.FS) Handler {
+func WithFS(e fs.FS) Handler {
+	entries, err := fs.ReadDir(e, ".")
+	if err != nil {
+		panic(err)
+	}
+	// 只有一个顶层目录且是目录，自动去掉前缀
+	if len(entries) == 1 && entries[0].IsDir() {
+		e, err = fs.Sub(e, entries[0].Name())
+		if err != nil {
+			panic(err)
+		}
+	}
 	return func(c Ctx) {
 		filename, _ := strings.CutPrefix(c.Path(), c.Route().Path)
 		filename = conv.Select(filename == "/" || filename == "", "index.html", filename)
-		f, err := fs.Open(path.Join(prefix, filename))
+		f, err := e.Open(filename)
 		if os.IsNotExist(err) {
 			c.next()
 			return

@@ -71,9 +71,9 @@ func New(use ...Middle) *Server {
 
 type Server struct {
 	Grouper                   //路由
+	App          *fiber.App   //实例
 	Log          frame.Logger //日志
 	port         int          //端口
-	App          *fiber.App   //实例
 	ListenConfig ListenConfig //监听配置
 }
 
