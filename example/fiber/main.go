@@ -46,11 +46,11 @@ func main() {
 
 		fiber.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
 
-		fiber.WithEmbed("dist", dist),
-		fiber.WithStatic("./example/fiber/dist/"),
+		fiber.WithEmbed(dist),
+		fiber.WithStatic("./example/dist/"),
 	)
 
-	s.Embed("/dist", "dist", dist)
+	s.Embed("/dist", dist)
 	s.Group("/api", func(g fiber.Grouper) {
 		g.Group("/user", fiber.WithStruct(&User{1.88}))
 		g.ALL("/succ", func(c fiber.Ctx) {
@@ -107,8 +107,8 @@ func main() {
 			in.Text200(string(c.Body()))
 		})
 		g.Static("", "./example/fiber/dist")
-		g.Embed("/dist", "dist", dist)
-		g.ALL("/dist", fiber.WithStatic("./example/fiber/dist/"))
+		g.Embed("/dist", dist)
+		g.ALL("/dist", fiber.WithStatic("./example/dist/"))
 		g.ALL("/:key", func(c fiber.Ctx) {
 			c.Succ(c.GetString("key"))
 		})
