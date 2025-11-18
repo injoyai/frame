@@ -80,11 +80,11 @@ func WithCORS() Middle {
 
 // WithLog 打印请求日志,配合WithRecover使用
 func WithLog() Middle {
-	log := frame.NewLogger()
+	logger := frame.NewLogger()
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			log.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
+			logger.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}
@@ -111,6 +111,13 @@ func WithLog2(color ...bool) Middle {
 			}
 			fmt.Printf("%s | %-7s | %-3d   | %-12s | %s  \n", nowStr, c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
 		}()
+		return c.Next()
+	}
+}
+
+func WithLimit(limit float64) Middle {
+	return func(c fiber.Ctx) error {
+		//todo
 		return c.Next()
 	}
 }

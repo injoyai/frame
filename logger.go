@@ -1,28 +1,15 @@
 package frame
 
 import (
-	"fmt"
-	"time"
+	"log"
+	"os"
 )
 
 type Logger interface {
-	Printf(format string, v ...any) (int, error)
-	Println(v ...any) (int, error)
+	Printf(format string, v ...any)
+	Println(v ...any)
 }
 
-var _ Logger = (*log)(nil)
-
-func NewLogger() Logger {
-	return &log{}
-}
-
-type log struct{}
-
-func (this *log) Printf(format string, v ...any) (int, error) {
-	return fmt.Printf("\x1b[36m"+time.Now().Format(time.TimeOnly)+" "+format+"\x1b[0m", v...)
-}
-
-func (this *log) Println(v ...any) (int, error) {
-	s := fmt.Sprint(v...)
-	return fmt.Println("\x1b[36m", time.Now().Format(time.TimeOnly), " ", s, "\x1b[0m")
+func NewLogger() *log.Logger {
+	return log.New(os.Stdout, "\x1b[36m", log.Ltime)
 }

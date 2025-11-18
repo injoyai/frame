@@ -35,14 +35,12 @@ func NewWriter(code int, i IMarshal, op ...WriterOption) Writer {
 	w := &writer{
 		code:   code,
 		header: http.Header{},
-		ReadCloser: struct {
-			io.Reader
-			io.Closer
-		}{
-			io.MultiReader(i, buf),
-			i,
-		},
-		Writer: buf,
+		reader: buf,
+		closer: i,
+		Buffer: buf,
+	}
+	if i != nil {
+		w.reader = io.MultiReader(i, buf)
 	}
 	if i != nil && i.Header() != nil {
 		w.header = i.Header()
@@ -56,8 +54,20 @@ func NewWriter(code int, i IMarshal, op ...WriterOption) Writer {
 type writer struct {
 	code          int         //响应状态码
 	header        http.Header //响应请求头
-	io.ReadCloser             //响应内容,body
-	io.Writer                 //写入body
+	reader        io.Reader   //响应内容,body
+	closer        io.Closer   //
+	*bytes.Buffer             //写入body
+}
+
+func (this *writer) Read(p []byte) (int, error) {
+	return this.reader.Read(p)
+}
+
+func (this *writer) Close() error {
+	if this.closer != nil {
+		return this.closer.Close()
+	}
+	return nil
 }
 
 func (this *writer) StatusCode() int {
@@ -98,12 +108,12 @@ func (this *writer) SetContentTypeJson() {
 
 func (this *writer) WriteAny(v any) error {
 	s := conv.String(v)
-	_, err := this.Writer.Write(*(*[]byte)(unsafe.Pointer(&s)))
+	_, err := this.Buffer.Write(*(*[]byte)(unsafe.Pointer(&s)))
 	return err
 }
 
 func (this *writer) WriteJson(v any) error {
-	return json.NewEncoder(this.Writer).Encode(v)
+	return json.NewEncoder(this.Buffer).Encode(v)
 }
 
 func (this *writer) WriteTo(w http.ResponseWriter) {
