@@ -1,4 +1,4 @@
-package middle
+package swagger
 
 import (
 	"bytes"
@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-var DefaultSwagger = &Swagger{
+var Default = &Swagger{
 	IndexPath:    "/swagger",
 	JsonPath:     "/swagger/swagger.json",
 	JsonFilename: "./docs/swagger.json",
-	UI:           DefaultSwaggerUI,
+	UI:           DefaultUI,
 }
 
 type Swagger struct {
@@ -51,7 +51,7 @@ func (this *Swagger) Do(path string, f func(r io.Reader, contentType string)) (b
 }
 
 var (
-	DefaultSwaggerUI = `<!DOCTYPE html>
+	DefaultUI = `<!DOCTYPE html>
         <html>
           <head>
             <title>SwaggerUI</title>

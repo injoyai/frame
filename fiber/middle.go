@@ -5,14 +5,16 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
-	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/frame/middle/swagger"
+
 	"io"
 	"io/fs"
 	"net/http"
@@ -141,7 +143,7 @@ Handler func(c fiber.Ctx)
 */
 
 // WithSwagger 加载swagger
-func WithSwagger(swag *middle.Swagger) Handler {
+func WithSwagger(swag *swagger.Swagger) Handler {
 	return func(c Ctx) {
 		_, err := swag.Do(
 			string(c.Request().URI().Path()),

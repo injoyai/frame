@@ -2,11 +2,13 @@ package main
 
 import (
 	"embed"
+
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/fiber"
-	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/frame/middle/swagger"
+
 	"log"
 	"net/http"
 	"time"
@@ -20,11 +22,11 @@ func main() {
 	s := fiber.Default(
 		fiber.WithPort(frame.DefaultPort),
 		fiber.WithPrintRoutes(false),
-		fiber.WithSwagger(&middle.Swagger{
+		fiber.WithSwagger(&swagger.Swagger{
 			IndexPath:    "/swagger",
 			JsonPath:     "/swagger/swagger.json",
 			JsonFilename: "./example/fiber/docs/swagger.json",
-			UI:           middle.DefaultSwaggerUI,
+			UI:           swagger.DefaultUI,
 		}),
 
 		//fiber.WithContext(func() context.Context {

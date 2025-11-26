@@ -3,8 +3,9 @@ package gins
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/injoyai/frame"
-	"github.com/injoyai/frame/middle"
 	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/frame/middle/swagger"
+
 	"io"
 	"net/http"
 	"time"
@@ -126,7 +127,7 @@ func BindCode(code int, handler Handler) func(s *Server) {
 	}
 }
 
-func WithSwagger(swag *middle.Swagger) Handler {
+func WithSwagger(swag *swagger.Swagger) Handler {
 	return func(c *gin.Context) {
 		ok, err := swag.Do(
 			c.Request.URL.Path,
