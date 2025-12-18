@@ -1,4 +1,4 @@
-package fiber
+package fbr
 
 import (
 	"context"

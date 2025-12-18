@@ -1,8 +1,9 @@
-package fiber
+package fbr
 
 import (
 	"context"
 	"errors"
+
 	"github.com/fasthttp/websocket"
 	"github.com/injoyai/conv"
 	"github.com/valyala/fasthttp"

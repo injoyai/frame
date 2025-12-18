@@ -2,16 +2,15 @@ package main
 
 import (
 	"embed"
-
-	"github.com/injoyai/conv"
-	"github.com/injoyai/frame"
-	"github.com/injoyai/frame/fiber"
-	"github.com/injoyai/frame/middle/in"
-	"github.com/injoyai/frame/middle/swagger"
-
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/injoyai/conv"
+	"github.com/injoyai/frame"
+	"github.com/injoyai/frame/fbr"
+	"github.com/injoyai/frame/middle/in"
+	"github.com/injoyai/frame/middle/swagger"
 )
 
 //go:embed dist/*
@@ -19,10 +18,10 @@ var dist embed.FS
 
 func main() {
 
-	s := fiber.Default(
-		fiber.WithPort(frame.DefaultPort),
-		fiber.WithPrintRoutes(false),
-		fiber.WithSwagger(&swagger.Swagger{
+	s := fbr.Default(
+		fbr.WithPort(frame.DefaultPort),
+		fbr.WithPrintRoutes(false),
+		fbr.WithSwagger(&swagger.Swagger{
 			IndexPath:    "/swagger",
 			JsonPath:     "/swagger/swagger.json",
 			JsonFilename: "./example/fiber/docs/swagger.json",
@@ -37,56 +36,56 @@ func main() {
 		//	logs.Err(err)
 		//}),
 
-		fiber.BindHtml(401, frame.Html401),
-		fiber.BindHtml(403, frame.Html403),
-		fiber.BindHtml(404, frame.Html404),
-		fiber.BindCode(500, func(c fiber.Ctx) {
+		fbr.BindHtml(401, frame.Html401),
+		fbr.BindHtml(403, frame.Html403),
+		fbr.BindHtml(404, frame.Html404),
+		fbr.BindCode(500, func(c fbr.Ctx) {
 			log.Println("错误:", string(c.Response().Body()))
 			c.Html(http.StatusInternalServerError, frame.Html500)
 			c.Succ("系统开小差啦,请稍后再试")
 		}),
 
-		fiber.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
+		fbr.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
 
-		fiber.WithEmbed(dist),
-		fiber.WithStatic("./example/dist/"),
+		fbr.WithEmbed(dist),
+		fbr.WithStatic("./example/dist/"),
 	)
 
 	s.Embed("/dist", dist)
-	s.Group("/api", func(g fiber.Grouper) {
-		g.Group("/user", fiber.WithStruct(&User{1.88}))
-		g.ALL("/succ", func(c fiber.Ctx) {
+	s.Group("/api", func(g fbr.Grouper) {
+		g.Group("/user", fbr.WithStruct(&User{1.88}))
+		g.ALL("/succ", func(c fbr.Ctx) {
 			c.Write([]byte("ctx message"))
 			c.Succ(667)
 			in.Succ(666)
 		})
-		g.ALL("/json", func(c fiber.Ctx) {
+		g.ALL("/json", func(c fbr.Ctx) {
 			c.JSON(map[string]any{"key": "value"})
 		})
-		g.ALL("/500", func(c fiber.Ctx) {
+		g.ALL("/500", func(c fbr.Ctx) {
 			in.Text(500, "500")
 		})
-		g.ALL("/401", func(c fiber.Ctx) {
+		g.ALL("/401", func(c fbr.Ctx) {
 			in.Text(401, "401")
 		})
-		g.ALL("/403", func(c fiber.Ctx) {
+		g.ALL("/403", func(c fbr.Ctx) {
 			in.Text(403, "403")
 		})
-		g.ALL("/404", func(c fiber.Ctx) {
+		g.ALL("/404", func(c fbr.Ctx) {
 			in.Text(404, "404")
 		})
-		g.ALL("/panic", func(c fiber.Ctx) {
+		g.ALL("/panic", func(c fbr.Ctx) {
 			panic("panic")
 		})
-		g.ALL("/proxy", func(c fiber.Ctx) {
+		g.ALL("/proxy", func(c fbr.Ctx) {
 			c.Proxy("http://127.0.0.1:8080/api/json")
 		})
-		g.ALL("/redirect", func(c fiber.Ctx) {
+		g.ALL("/redirect", func(c fbr.Ctx) {
 			c.RedirectTo("/api/succ")
 		})
 		g.Redirect("/redirect2", "/api/succ")
-		g.ALL("/ws", func(c fiber.Ctx) {
-			c.Websocket(func(ws *fiber.Websocket) {
+		g.ALL("/ws", func(c fbr.Ctx) {
+			c.Websocket(func(ws *fbr.Websocket) {
 				for {
 					<-time.After(time.Second * 3)
 					_, err := ws.WriteText("hello")
@@ -96,22 +95,22 @@ func main() {
 				}
 			})
 		})
-		g.ALL("/sse", func(c fiber.Ctx) {
-			c.SSE(func(w fiber.SSE) {
+		g.ALL("/sse", func(c fbr.Ctx) {
+			c.SSE(func(w fbr.SSE) {
 				for i := 0; i < 10; i++ {
 					w.WriteString("data: " + conv.String(i))
 					<-time.After(time.Second)
 				}
 			})
 		})
-		g.ALL("/body", func(c fiber.Ctx) {
+		g.ALL("/body", func(c fbr.Ctx) {
 			_ = c.Body()
 			in.Text200(string(c.Body()))
 		})
 		g.Static("", "./example/fiber/dist")
 		g.Embed("/dist", dist)
-		g.ALL("/dist", fiber.WithStatic("./example/dist/"))
-		g.ALL("/:key", func(c fiber.Ctx) {
+		g.ALL("/dist", fbr.WithStatic("./example/dist/"))
+		g.ALL("/:key", func(c fbr.Ctx) {
 			c.Succ(c.GetString("key"))
 		})
 	})
@@ -125,21 +124,21 @@ type User struct {
 }
 
 // Name 指针下方法可以注册,只能指针对象注册
-func (u *User) Name(c fiber.Ctx) {
+func (u *User) Name(c fbr.Ctx) {
 	in.Succ("injoy")
 }
 
 // Age 指针对象可以注册非指针下方法
-func (u User) Age(c fiber.Ctx) {
+func (u User) Age(c fbr.Ctx) {
 	in.Succ(18)
 }
 
 // High 测试引用对象字段,对象不能为nil
-func (u User) High(c fiber.Ctx) {
+func (u User) High(c fbr.Ctx) {
 	in.Succ(u.high)
 }
 
 // test 小写不会注册
-func (u User) test(c fiber.Ctx) {
+func (u User) test(c fbr.Ctx) {
 	in.Succ("test")
 }

@@ -8,28 +8,28 @@ package main
 
 import(
 	"github.com/injoyai/frame"
-    "github.com/injoyai/frame/fiber"
+    "github.com/injoyai/frame/fbr"
 )
 
 func main(){
 
-    s := fiber.Default(
-            fiber.WithPort(frame.DefaultPort),
-            fiber.BindHtml(401, frame.Html401),
-            fiber.BindHtml(403, frame.Html403),
-            fiber.BindHtml(404, frame.Html404),
-            fiber.WithStatic("./dist/"),
+    s := fbr.Default(
+            fbr.WithPort(frame.DefaultPort),
+            fbr.BindHtml(401, frame.Html401),
+            fbr.BindHtml(403, frame.Html403),
+            fbr.BindHtml(404, frame.Html404),
+            fbr.WithStatic("./dist/"),
         )
 	
-	s.Group("/api", func(g fiber.Grouper) {
-        g.ALL("/test", func(c fiber.Ctx) {
+	s.Group("/api", func(g fbr.Grouper) {
+        g.ALL("/test", func(c fbr.Ctx) {
             c.Succ(667)
         })
-        g.ALL("/test2", func(c fiber.Ctx) {
+        g.ALL("/test2", func(c fbr.Ctx) {
             c.JSON(map[string]any{"key": "value"})
         })
-        g.ALL("/ws", func(c fiber.Ctx) {
-            c.Websocket(func(ws *fiber.Websocket) {
+        g.ALL("/ws", func(c fbr.Ctx) {
+            c.Websocket(func(ws *fbr.Websocket) {
                 for {
                     <-time.After(time.Second * 3)
                     _, err := ws.WriteText("hello")

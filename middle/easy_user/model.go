@@ -3,10 +3,11 @@ package easy_user
 import (
 	"context"
 	"errors"
-	"github.com/injoyai/base/crypt/md5"
-	"github.com/injoyai/conv"
 	"strings"
 	"time"
+
+	"github.com/injoyai/base/crypt/md5"
+	"github.com/injoyai/conv"
 )
 
 var (

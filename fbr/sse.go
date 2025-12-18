@@ -1,10 +1,11 @@
-package fiber
+package fbr
 
 import (
 	"bufio"
-	"github.com/injoyai/conv"
 	"io"
 	"unsafe"
+
+	"github.com/injoyai/conv"
 )
 
 type SSE interface {

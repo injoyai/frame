@@ -1,14 +1,15 @@
-package fiber
+package fbr
 
 import (
 	"bufio"
+	"sync"
+	"time"
+
 	"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/valyala/fasthttp"
-	"sync"
-	"time"
 )
 
 type (

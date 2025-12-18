@@ -1,11 +1,12 @@
-package fiber
+package fbr
 
 import (
 	"fmt"
+	"net"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle/in"
-	"net"
 )
 
 type (

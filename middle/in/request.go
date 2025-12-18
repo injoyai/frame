@@ -1,12 +1,13 @@
 package in
 
 import (
-	"github.com/injoyai/base/maps"
-	"github.com/injoyai/conv"
-	"github.com/injoyai/conv/codec"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/injoyai/base/maps"
+	"github.com/injoyai/conv"
+	"github.com/injoyai/conv/codec"
 )
 
 func GetVar(r *http.Request, key string) *conv.Var {

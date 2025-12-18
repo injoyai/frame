@@ -1,14 +1,14 @@
 package gins
 
 import (
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/injoyai/frame/middle/swagger"
-
-	"io"
-	"net/http"
-	"time"
 )
 
 type Handler = gin.HandlerFunc

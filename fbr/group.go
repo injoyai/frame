@@ -1,11 +1,12 @@
-package fiber
+package fbr
 
 import (
 	"embed"
 	"fmt"
+	"io/fs"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/frame/middle/in"
-	"io/fs"
 )
 
 type Grouper interface {
