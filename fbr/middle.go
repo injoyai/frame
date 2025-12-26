@@ -330,12 +330,37 @@ func WithStruct(a any) func(g Grouper) {
 		for i := 0; i < t.NumMethod(); i++ {
 			m := t.Method(i)
 			if m.Type.NumIn() == 2 && m.Type.In(1) == ctxType {
-				g.ALL(m.Name, func(c Ctx) {
+				path := strings.ToLower(m.Name)
+				g.ALL(path, func(c Ctx) {
 					m.Func.Call([]reflect.Value{
 						reflect.ValueOf(a),
 						reflect.ValueOf(c),
 					})
 				})
+			}
+		}
+	}
+}
+
+// NewWithStruct 注册对象的方法到路由
+func NewWithStruct(f func(g Grouper, funcName string, f Handler)) func(a any) func(g Grouper) {
+	return func(a any) func(g Grouper) {
+		t := reflect.TypeOf(a)
+		if t.Kind() != reflect.Struct && t.Elem().Kind() != reflect.Struct {
+			panic("type must be *struct/struct !!!")
+		}
+		ctxType := reflect.TypeOf((*Ctx)(nil)).Elem()
+		return func(g Grouper) {
+			for i := 0; i < t.NumMethod(); i++ {
+				m := t.Method(i)
+				if m.Type.NumIn() == 2 && m.Type.In(1) == ctxType {
+					f(g, m.Name, func(c Ctx) {
+						m.Func.Call([]reflect.Value{
+							reflect.ValueOf(a),
+							reflect.ValueOf(c),
+						})
+					})
+				}
 			}
 		}
 	}
