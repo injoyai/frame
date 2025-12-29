@@ -167,6 +167,16 @@ func WithPing() Handler {
 	}
 }
 
+// WithOptions options请求立马返回成功
+func WithOptions() Handler {
+	return func(c Ctx) {
+		if c.Method() == http.MethodOptions {
+			c.Succ(nil)
+		}
+		c.next()
+	}
+}
+
 // WithEmbed 加载嵌入文件
 func WithEmbed(e embed.FS) Handler {
 	return WithFS(e)

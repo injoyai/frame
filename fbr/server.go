@@ -40,6 +40,7 @@ func Default(use ...Middle) *Server {
 		WithCORS(),
 		WithRecover(),
 		WithPing(),
+		WithOptions(),
 	}
 	op = append(op, use...)
 	return New(op...)

@@ -54,6 +54,7 @@ func main() {
 	s.Embed("/dist", dist)
 	s.Group("/api", func(g fbr.Grouper) {
 		g.Group("/user", fbr.WithStruct(&User{1.88}))
+		g.GET("/xxx", func(c fbr.Ctx) { c.Succ("xxx") })
 		g.ALL("/succ", func(c fbr.Ctx) {
 			c.Write([]byte("ctx message"))
 			c.Succ(667)
