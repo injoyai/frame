@@ -37,7 +37,7 @@ type Ctx interface {
 	Requester
 
 	// Respondent 响应接口
-	in.Respondent
+	Respondent
 
 	// Proxy 代理请求
 	Proxy(url string)
