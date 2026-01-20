@@ -293,6 +293,42 @@ Option func(s *Server)
 
 */
 
+func WithGroup(path string, handler func(g Grouper)) Option {
+	return func(s *Server) {
+		s.Group(path, handler)
+	}
+}
+
+func WithALL(path string, handler Handler) Option {
+	return func(s *Server) {
+		s.ALL(path, handler)
+	}
+}
+
+func WithGET(path string, handler Handler) Option {
+	return func(s *Server) {
+		s.GET(path, handler)
+	}
+}
+
+func WithPOST(path string, handler Handler) Option {
+	return func(s *Server) {
+		s.POST(path, handler)
+	}
+}
+
+func WithPUT(path string, handler Handler) Option {
+	return func(s *Server) {
+		s.PUT(path, handler)
+	}
+}
+
+func WithDELETE(path string, handler Handler) Option {
+	return func(s *Server) {
+		s.DELETE(path, handler)
+	}
+}
+
 // WithPort 设置监听端口
 func WithPort(port int) Option {
 	return func(s *Server) {

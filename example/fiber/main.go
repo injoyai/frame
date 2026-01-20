@@ -49,6 +49,14 @@ func main() {
 
 		fbr.WithEmbed(dist),
 		fbr.WithStatic("./example/dist/"),
+		fbr.WithALL("/api", func(c fbr.Ctx) {
+			c.Succ(123)
+		}),
+		fbr.WithGroup("/api2", func(g fbr.Grouper) {
+			g.ALL("xxx", func(c fbr.Ctx) {
+				c.Succ(c.Path())
+			})
+		}),
 	)
 
 	s.Embed("/dist", dist)
