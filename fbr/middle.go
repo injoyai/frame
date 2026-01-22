@@ -4,8 +4,9 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"path/filepath"
+	"path"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
@@ -198,23 +199,42 @@ func WithFS(e fs.FS, sub ...string) Handler {
 	}
 
 	var err error
-	subDir := filepath.Join(sub...)
-	e, err = fs.Sub(e, subDir)
-	if err != nil {
-		panic(err)
+	subDir := path.Join(sub...)
+	if len(subDir) > 0 {
+		e, err = fs.Sub(e, subDir)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return func(c Ctx) {
 		filename, _ := strings.CutPrefix(c.Path(), c.Route().Path)
 		filename = conv.Select(filename == "/" || filename == "", "index.html", filename)
 		f, err := e.Open(filename)
-		if os.IsNotExist(err) {
+		if os.IsNotExist(err) || errors.Is(err, os.ErrNotExist) {
 			c.next()
 			return
 		}
 		c.CheckErr(err)
 		defer f.Close()
 		c.Custom200(f, nil)
+	}
+}
+
+// 可选：打印 FS 树，用于调试 embed.FS
+func printFSTree(e fs.FS, dir string) {
+	entries, err := fs.ReadDir(e, dir)
+	if err != nil {
+		fmt.Println("[FS Tree] 无法读取目录", dir, err)
+		return
+	}
+	for _, ent := range entries {
+		if ent.IsDir() {
+			fmt.Println("[FS Tree] Dir:", path.Join(dir, ent.Name()))
+			printFSTree(e, path.Join(dir, ent.Name()))
+		} else {
+			fmt.Println("[FS Tree] File:", path.Join(dir, ent.Name()))
+		}
 	}
 }
 
