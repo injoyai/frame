@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
@@ -178,23 +179,31 @@ func WithOptions() Handler {
 }
 
 // WithEmbed 加载嵌入文件
-func WithEmbed(e embed.FS) Handler {
-	return WithFS(e)
+func WithEmbed(e embed.FS, sub ...string) Handler {
+	return WithFS(e, sub...)
 }
 
 // WithFS 加载文件
-func WithFS(e fs.FS) Handler {
-	entries, err := fs.ReadDir(e, ".")
-	if err != nil {
-		panic(err)
-	}
-	// 只有一个顶层目录且是目录，自动去掉前缀
-	if len(entries) == 1 && entries[0].IsDir() {
-		e, err = fs.Sub(e, entries[0].Name())
+func WithFS(e fs.FS, sub ...string) Handler {
+
+	if len(sub) == 0 {
+		entries, err := fs.ReadDir(e, ".")
 		if err != nil {
 			panic(err)
 		}
+		// 只有一个顶层目录且是目录，自动去掉前缀
+		if len(entries) == 1 && entries[0].IsDir() {
+			sub = []string{entries[0].Name()}
+		}
 	}
+
+	var err error
+	subDir := filepath.Join(sub...)
+	e, err = fs.Sub(e, subDir)
+	if err != nil {
+		panic(err)
+	}
+
 	return func(c Ctx) {
 		filename, _ := strings.CutPrefix(c.Path(), c.Route().Path)
 		filename = conv.Select(filename == "/" || filename == "", "index.html", filename)
