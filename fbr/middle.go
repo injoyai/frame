@@ -3,7 +3,6 @@ package fbr
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"mime"
@@ -25,7 +24,6 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"unsafe"
 )
 
 func dealErr(c fiber.Ctx, e any) {
@@ -48,8 +46,7 @@ func dealErr(c fiber.Ctx, e any) {
 	default:
 		c.Response().ResetBody()
 		c.Status(http.StatusInternalServerError)
-		s := conv.String(e)
-		c.Write(*(*[]byte)(unsafe.Pointer(&s)))
+		c.SendString(conv.String(e))
 
 	}
 }
@@ -240,8 +237,8 @@ func WithStatic(root string) Handler {
 // WithCache 缓存无参的GET请求
 func WithCache(expiration ...time.Duration) Handler {
 	type Message struct {
-		Header []byte `json:"header"`
-		Body   []byte `json:"body"`
+		Header map[string][]string
+		Body   []byte
 	}
 	cache := maps.NewSafe()
 	return func(c Ctx) {
@@ -250,16 +247,20 @@ func WithCache(expiration ...time.Duration) Handler {
 				if err := c.Next(); err != nil {
 					return nil, err
 				}
+				// Copy body to avoid data corruption if buffer is reused
+				body := c.Response().Body()
+				bodyCopy := make([]byte, len(body))
+				copy(bodyCopy, body)
+
 				return &Message{
-					Header: c.Response().Header.Header(),
-					Body:   c.Response().Body(),
+					Header: c.GetRespHeaders(),
+					Body:   bodyCopy,
 				}, nil
 			}, expiration...)
 			c.CheckErr(err)
-			header := http.Header{}
-			err = json.Unmarshal(data.(*Message).Header, &header)
-			c.CheckErr(err)
-			c.Custom200(data.(*Message).Body, header)
+			msg := data.(*Message)
+			c.Custom200(msg.Body, msg.Header)
+			return
 		}
 		c.next()
 	}
