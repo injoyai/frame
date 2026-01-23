@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/pprof"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/injoyai/base/maps"
@@ -86,7 +87,7 @@ func WithLog() Middle {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			logger.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
+			logger.Printf("| %-7s | %-3d   | %-12s | %s  \n", c.Method(), c.Response().StatusCode(), time.Since(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}
@@ -108,20 +109,34 @@ func WithLog2(color ...bool) Middle {
 				default:
 					codeStr = fmt.Sprintf("\x1b[31m%-3d\x1b[0m", code)
 				}
-				fmt.Printf("%s | \x1B[34m%-7s\x1B[0m | %s   | %-12s | %s  \n", nowStr, c.Method(), codeStr, time.Now().Sub(start), c.OriginalURL())
+				fmt.Printf("%s | \x1B[34m%-7s\x1B[0m | %s   | %-12s | %s  \n", nowStr, c.Method(), codeStr, time.Since(start), c.OriginalURL())
 				return
 			}
-			fmt.Printf("%s | %-7s | %-3d   | %-12s | %s  \n", nowStr, c.Method(), c.Response().StatusCode(), time.Now().Sub(start), c.OriginalURL())
+			fmt.Printf("%s | %-7s | %-3d   | %-12s | %s  \n", nowStr, c.Method(), c.Response().StatusCode(), time.Since(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}
 }
 
 func WithLimit(limit float64) Middle {
-	return func(c fiber.Ctx) error {
-		//todo
-		return c.Next()
+	if limit <= 0 {
+		return func(c fiber.Ctx) error {
+			return c.Status(http.StatusTooManyRequests).SendString("Too Many Requests")
+		}
 	}
+	max := int(limit)
+	expiration := time.Second
+	if limit < 1 {
+		max = 1
+		expiration = time.Duration(float64(time.Second) / limit)
+	}
+	return limiter.New(limiter.Config{
+		Max:        max,
+		Expiration: expiration,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return c.IP()
+		},
+	})
 }
 
 // WithResponseCode 设置响应码
