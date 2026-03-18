@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
-	"unsafe"
 
 	"github.com/injoyai/conv"
 )
@@ -109,7 +107,7 @@ func (this *writer) SetContentTypeJson() {
 
 func (this *writer) WriteAny(v any) error {
 	s := conv.String(v)
-	_, err := this.Buffer.Write(*(*[]byte)(unsafe.Pointer(&s)))
+	_, err := this.Buffer.WriteString(s)
 	return err
 }
 
@@ -123,8 +121,10 @@ func (this *writer) WriteTo(w http.ResponseWriter) {
 		return
 	}
 	if this.header != nil {
-		for i, v := range this.header {
-			w.Header().Set(i, strings.Join(v, ","))
+		for i, vs := range this.header {
+			for _, v := range vs {
+				w.Header().Add(i, v)
+			}
 		}
 	}
 	if this.code > 0 {
