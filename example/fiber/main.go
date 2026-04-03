@@ -28,11 +28,11 @@ func main() {
 			UI:           swagger.DefaultUI,
 		}),
 
-		//fiber.WithContext(func() context.Context {
+		//fbr.WithContext(func() context.Context {
 		//	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		//	return ctx
 		//}()),
-		//fiber.WithShutdown(func(err error) {
+		//fbr.WithShutdown(func(err error) {
 		//	logs.Err(err)
 		//}),
 
