@@ -57,7 +57,7 @@ func New(use ...Middle) *Server {
 	ser := &Server{
 		Grouper: &group{
 			Router:     app.Group(""),
-			Respondent: in.DefaultClient,
+			Respondent: in.New(),
 		},
 		port: frame.DefaultPort,
 		App:  app,
