@@ -93,26 +93,24 @@ func WithLog() Middle {
 	}
 }
 
-func WithLog2(color ...bool) Middle {
+func WithLog2() Middle {
+	logger := frame.NewLogger()
 	return func(c fiber.Ctx) error {
 		start := time.Now()
 		defer func() {
-			nowStr := time.Now().Format("15:04:05")
-			if len(color) > 0 && color[0] {
-				code := c.Response().StatusCode()
-				codeStr := conv.String(code)
-				switch {
-				case code < 300:
-					codeStr = fmt.Sprintf("\x1b[32m%-3d\x1b[0m", code)
-				case code < 400:
-					codeStr = fmt.Sprintf("\x1b[33m%-3d\x1b[0m", code)
-				default:
-					codeStr = fmt.Sprintf("\x1b[31m%-3d\x1b[0m", code)
-				}
-				fmt.Printf("%s | \x1B[34m%-7s\x1B[0m | %s   | %-12s | %s  \n", nowStr, c.Method(), codeStr, time.Since(start), c.OriginalURL())
-				return
+			code := c.Response().StatusCode()
+			codeStr := conv.String(code)
+			switch {
+			case code < http.StatusMultipleChoices:
+				codeStr = fmt.Sprintf("\x1b[32m%-3d\x1b[0m", code)
+			case code < http.StatusBadRequest:
+				codeStr = fmt.Sprintf("\x1b[36m%-3d\x1b[0m", code)
+			case code < http.StatusInternalServerError:
+				codeStr = fmt.Sprintf("\x1b[33m%-3d\x1b[0m", code)
+			default:
+				codeStr = fmt.Sprintf("\x1b[31m%-3d\x1b[0m", code)
 			}
-			fmt.Printf("%s | %-7s | %-3d   | %-12s | %s  \n", nowStr, c.Method(), c.Response().StatusCode(), time.Since(start), c.OriginalURL())
+			logger.Printf("| \x1B[34m%-7s\x1B[0m | %s   | %-12s | %s  \n", c.Method(), codeStr, time.Since(start), c.OriginalURL())
 		}()
 		return c.Next()
 	}

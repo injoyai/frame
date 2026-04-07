@@ -124,8 +124,8 @@ func main() {
 		})
 	})
 
-	s.Run()
-
+	err := s.Run()
+	s.Log.Println(err)
 }
 
 type User struct {
