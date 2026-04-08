@@ -41,16 +41,21 @@ func (this *group) SetRespondent(r in.Respondent) {
 func (this *group) Use(use ...Middle) {
 	for _, v := range use {
 		switch f := v.(type) {
+		case func(r Respondent):
+			f(this.Respondent)
 		case func(c in.Client):
 			f(this.Respondent.(in.Client))
 		case func(e Writer):
 			this.Respondent.(in.Client).SetWriterOption(f)
+		case func(g Grouper):
+			f(this)
 		default:
 			this.Router.Use(this.transfer(v))
 		}
 	}
 }
 
+// transfer 这里对应一个个接口,全局操作不要放这里
 func (this *group) transfer(handler Middle) HandlerBase {
 	return func(ctx fiber.Ctx) (err error) {
 		switch f := handler.(type) {
@@ -58,6 +63,13 @@ func (this *group) transfer(handler Middle) HandlerBase {
 			dealErr(ctx, f(ctx))
 		case func(ctx fiber.Ctx):
 			f(ctx)
+		case []any:
+			for _, v := range f {
+				if err = this.transfer(v)(ctx); err != nil {
+					return
+				}
+			}
+
 		case func(Ctx) error:
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
@@ -66,23 +78,16 @@ func (this *group) transfer(handler Middle) HandlerBase {
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
 			f(cc)
-		case func(r Respondent):
-			f(this.Respondent)
 		case func(r Requester):
 			cc := NewCtx(ctx, this.Respondent)
 			defer cc.free()
 			f(cc)
-		case []any:
-			for _, v := range f {
-				if err = this.transfer(v)(ctx); err != nil {
-					return
-				}
-			}
-		case func(s *Server):
-			//pass
+
 		default:
 			panic(fmt.Sprintf("unknown handler/middle %T", handler))
+
 		}
+
 		return
 	}
 }

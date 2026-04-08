@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mime"
 	"path"
+	"reflect"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
@@ -22,7 +23,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -323,79 +323,43 @@ func BindCodes(m map[int]Handler) Handler {
 
 /*
 
-Option func(s *Server)
+func(g Grouper)
 
 */
 
-func WithGroup(path string, handler func(g Grouper)) Option {
-	return func(s *Server) {
-		s.Group(path, handler)
+func WithGroup(path string, handler func(g Grouper)) func(g Grouper) {
+	return func(g Grouper) {
+		g.Group(path, handler)
 	}
 }
 
-func WithALL(path string, handler Handler) Option {
-	return func(s *Server) {
-		s.ALL(path, handler)
+func WithALL(path string, handler Handler) func(g Grouper) {
+	return func(g Grouper) {
+		g.ALL(path, handler)
 	}
 }
 
-func WithGET(path string, handler Handler) Option {
-	return func(s *Server) {
-		s.GET(path, handler)
+func WithGET(path string, handler Handler) func(g Grouper) {
+	return func(g Grouper) {
+		g.GET(path, handler)
 	}
 }
 
-func WithPOST(path string, handler Handler) Option {
-	return func(s *Server) {
-		s.POST(path, handler)
+func WithPOST(path string, handler Handler) func(g Grouper) {
+	return func(g Grouper) {
+		g.POST(path, handler)
 	}
 }
 
-func WithPUT(path string, handler Handler) Option {
-	return func(s *Server) {
-		s.PUT(path, handler)
+func WithPUT(path string, handler Handler) func(g Grouper) {
+	return func(g Grouper) {
+		g.PUT(path, handler)
 	}
 }
 
-func WithDELETE(path string, handler Handler) Option {
-	return func(s *Server) {
-		s.DELETE(path, handler)
-	}
-}
-
-// WithPort 设置监听端口
-func WithPort(port int) Option {
-	return func(s *Server) {
-		s.SetPort(port)
-	}
-}
-
-// WithListenConfig 设置监听配置
-func WithListenConfig(cfg ListenConfig) Option {
-	return func(s *Server) {
-		s.ListenConfig = cfg
-	}
-}
-
-// WithPrintRoutes 打印路由信息
-func WithPrintRoutes(b ...bool) Option {
-	return func(s *Server) {
-		s.ListenConfig.EnablePrintRoutes = len(b) == 0 || b[0]
-	}
-}
-
-// WithShutdown 设置服务关闭事件
-func WithShutdown(f func(err error)) Option {
-	return func(s *Server) {
-		s.ListenConfig.OnShutdownSuccess = func() { f(nil) }
-		s.ListenConfig.OnShutdownError = f
-	}
-}
-
-// WithContext 设置服务上下文
-func WithContext(ctx context.Context) Option {
-	return func(s *Server) {
-		s.ListenConfig.GracefulContext = ctx
+func WithDELETE(path string, handler Handler) func(g Grouper) {
+	return func(g Grouper) {
+		g.DELETE(path, handler)
 	}
 }
 
@@ -443,5 +407,47 @@ func NewWithStruct(f func(g Grouper, funcName string, f Handler)) func(a any) fu
 				}
 			}
 		}
+	}
+}
+
+/*
+
+Option func(s *Server)
+
+*/
+
+// WithPort 设置监听端口
+func WithPort(port int) Option {
+	return func(s *Server) {
+		s.SetPort(port)
+	}
+}
+
+// WithListenConfig 设置监听配置
+func WithListenConfig(cfg ListenConfig) Option {
+	return func(s *Server) {
+		s.ListenConfig = cfg
+	}
+}
+
+// WithPrintRoutes 打印路由信息
+func WithPrintRoutes(b ...bool) Option {
+	return func(s *Server) {
+		s.ListenConfig.EnablePrintRoutes = len(b) == 0 || b[0]
+	}
+}
+
+// WithShutdown 设置服务关闭事件
+func WithShutdown(f func(err error)) Option {
+	return func(s *Server) {
+		s.ListenConfig.OnShutdownSuccess = func() { f(nil) }
+		s.ListenConfig.OnShutdownError = f
+	}
+}
+
+// WithContext 设置服务上下文
+func WithContext(ctx context.Context) Option {
+	return func(s *Server) {
+		s.ListenConfig.GracefulContext = ctx
 	}
 }
