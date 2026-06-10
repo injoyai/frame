@@ -8,6 +8,7 @@ import (
 	"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/injoyai/conv"
+	"github.com/injoyai/frame"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/valyala/fasthttp"
 )
@@ -17,6 +18,10 @@ type (
 	Writer       = in.Writer
 	WriterOption = in.WriterOption
 	Respondent   = in.Respondent
+)
+
+const (
+	DefaultPort = frame.DefaultPort
 )
 
 var (
