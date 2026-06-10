@@ -138,15 +138,21 @@ func (this *group) PATCH(path string, handler Handler) {
 }
 
 func (this *group) Static(path, dir string) {
-	this.ALL(path, WithStatic(dir))
+	this.Group(path, func(g Grouper) {
+		g.Use(WithStatic(dir))
+	})
 }
 
 func (this *group) Embed(path string, e embed.FS) {
-	this.ALL(path, WithEmbed(e))
+	this.Group(path, func(g Grouper) {
+		g.Use(WithEmbed(e))
+	})
 }
 
 func (this *group) FS(path string, fs fs.FS) {
-	this.ALL(path, WithFS(fs))
+	this.Group(path, func(g Grouper) {
+		g.Use(WithFS(fs))
+	})
 }
 
 func (this *group) Redirect(path, to string) {

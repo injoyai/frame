@@ -1,20 +1,17 @@
 package main
 
 import (
-	"embed"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/injoyai/conv"
 	"github.com/injoyai/frame"
+	"github.com/injoyai/frame/example"
 	"github.com/injoyai/frame/fbr"
 	"github.com/injoyai/frame/middle/in"
 	"github.com/injoyai/frame/middle/swagger"
 )
-
-//go:embed dist/*
-var dist embed.FS
 
 func main() {
 
@@ -47,7 +44,7 @@ func main() {
 
 		fbr.WithResponseCode("success", "fail", "unauthorized", "forbidden"),
 
-		fbr.WithEmbed(dist),
+		fbr.WithEmbed(example.Web),
 		fbr.WithStatic("./example/dist/"),
 		fbr.WithALL("/api", func(c fbr.Ctx) {
 			c.Succ(123)
@@ -59,7 +56,7 @@ func main() {
 		}),
 	)
 
-	s.Embed("/dist", dist)
+	//s.Embed("/", example.Web)
 	s.Group("/api", func(g fbr.Grouper) {
 		g.Group("/user", fbr.WithStruct(&User{1.88}))
 		g.GET("/xxx", func(c fbr.Ctx) { c.Succ("xxx") })
@@ -117,7 +114,7 @@ func main() {
 			in.Text200(string(c.Body()))
 		})
 		g.Static("", "./example/fiber/dist")
-		g.Embed("/dist", dist)
+		//g.Embed("/dist", dist)
 		g.ALL("/dist", fbr.WithStatic("./example/dist/"))
 		g.ALL("/:key", func(c fbr.Ctx) {
 			c.Succ(c.GetString("key"))
